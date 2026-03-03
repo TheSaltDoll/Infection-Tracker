@@ -176,8 +176,9 @@ function snapshotStartOfRound() {
 
 // ─── Inform list logic ───
 // Round 1: all active players (anyone could be initial Thing)
-// Round 2+: players who had an encounter in a previous round and haven't checked in since,
-//   plus uninformed Things who are due.
+// Round 2+: players who PICKED A TOKEN in an encounter in a previous round and haven't
+//   checked in since, plus uninformed Things who are due.
+//   Players who didn't pick (BS player observing, weapon holder opting out) are excluded.
 function buildInformList() {
   const active = getActivePlayerIndices();
   if (S.round === 1) return [...active];
@@ -190,10 +191,10 @@ function buildInformList() {
       const dueRound = (p.infectedOnRound === 0) ? 1 : p.infectedOnRound + 1;
       if (S.round >= dueRound) list.add(i);
     }
-    // Player had encounter in a previous round and hasn't checked in since
+    // Player picked a token in a previous round's encounter and hasn't checked in since
     const lastChecked = p.lastCheckedInRound || 0;
     const needsCheckIn = S.encounters.some(e =>
-      e.room.includes(i) && e.room.length >= 2 &&
+      e.activePickers && e.activePickers.includes(i) &&
       e.round < S.round && e.round > lastChecked
     );
     if (needsCheckIn) list.add(i);
@@ -210,10 +211,10 @@ function getPlayersToInformNextRound() {
       const dueRound = (p.infectedOnRound === 0) ? 1 : p.infectedOnRound + 1;
       if (dueRound === S.round + 1) next.add(i);
     }
-    // Encounters this round trigger check-in next round
+    // Encounters this round where player picked a token trigger check-in next round
     const lastChecked = p.lastCheckedInRound || 0;
     const hasCurEnc = S.encounters.some(e =>
-      e.room.includes(i) && e.room.length >= 2 &&
+      e.activePickers && e.activePickers.includes(i) &&
       e.round === S.round && S.round > lastChecked
     );
     if (hasCurEnc) next.add(i);
@@ -304,23 +305,27 @@ function resolveRoom() {
   }
 
   // Remove Beyond Suspicion from anyone who picked a token
+  // Track who actually picked a token (for inform list purposes)
+  const activePickers = [];
   for (const pickerStr of Object.keys(picks)) {
     const picker = parseInt(pickerStr);
     if (picks[pickerStr] !== 'none') {
       S.players[picker].beyondSuspicion = false;
+      activePickers.push(picker);
     }
   }
 
-  // Mark all room participants as having been in an encounter this round
+  // Mark all room participants as having been in a room this round (for room-per-round limit)
   for (const i of room) {
     S.players[i].inEncounterThisRound = true;
   }
 
-  // Save encounter record
+  // Save encounter record — include activePickers so inform logic knows who participated
   S.encounters.push({
     round: S.round,
     room: [...room],
     picks: {...picks},
+    activePickers: activePickers,
     results: results,
   });
 
@@ -486,7 +491,12 @@ function renderMain() {
 function renderRoomSelect() {
   const available = getAvailableForRoom();
   const selected = S.room.playerIndices;
-  const canProceed = selected.length >= 2 && selected.length <= 3;
+  // Can proceed only if 2-3 players AND at least one non-BS player exists to present tokens
+  // AND at least one player would be able to pick from a non-BS player
+  const nonBSInRoom = selected.filter(i => !S.players[i].beyondSuspicion);
+  const canProceed = selected.length >= 2 && selected.length <= 3 && nonBSInRoom.length >= 1 &&
+    // At least one player can pick from a non-BS player (someone other than themselves is non-BS)
+    selected.some(i => selected.some(j => j !== i && !S.players[j].beyondSuspicion));
 
   return `<div class="fade-in">
     <div class="header-bar">
@@ -508,6 +518,7 @@ function renderRoomSelect() {
         </div>`;
       }).join('')}
       <div class="gap-md"></div>
+      ${selected.length >= 2 && nonBSInRoom.length < 1 ? '<p style="color:var(--warn);font-size:0.85rem;margin-bottom:8px;">⚠ No tokens can be picked — all selected players are Beyond Suspicion.</p>' : ''}
       <button class="btn btn-primary" ${!canProceed?'disabled':''} onclick="goToRoomPicks()">Set Up Picks</button>
       <div class="gap-sm"></div>
       <button class="btn btn-secondary" onclick="cancelRoom()">Cancel</button>
@@ -528,29 +539,40 @@ function renderRoomPicks() {
     const canSkip = p.beyondSuspicion || p.hasWeapon;
     // Targets: other players in room who are NOT beyond suspicion (they have no tokens)
     const targets = room.filter(j => j !== i && !S.players[j].beyondSuspicion);
-    const currentPick = picks[i] !== undefined ? picks[i] : (canSkip ? 'none' : '');
+    const forcedNoPick = targets.length === 0;
+    const currentPick = picks[i] !== undefined ? picks[i] : (canSkip || forcedNoPick ? 'none' : '');
 
     let chips = '';
     if (p.beyondSuspicion) chips += ' <span class="chip chip-beyond">BS</span>';
     if (p.hasWeapon) chips += ' <span class="chip chip-weapon">W</span>';
 
-    return `<div class="room-player-row">
-      <div class="room-player-name">${esc(p.name)}${chips}</div>
-      <div class="room-pick-row">
+    let pickUI;
+    if (forcedNoPick) {
+      pickUI = `<div class="room-pick-row"><label style="color:var(--text-dim);font-style:italic;">No tokens available to pick</label></div>`;
+    } else {
+      pickUI = `<div class="room-pick-row">
         <label>Picks from:</label>
         <select onchange="setRoomPick(${i},this.value)">
           ${canSkip ? `<option value="none" ${currentPick==='none'?'selected':''}>No pick</option>` : `<option value="" ${currentPick===''?'selected':''}>Select...</option>`}
           ${targets.map(j => `<option value="${j}" ${currentPick===j?'selected':''}>${esc(S.players[j].name)}</option>`).join('')}
         </select>
-      </div>
-      ${p.beyondSuspicion && currentPick !== 'none' && currentPick !== '' ? '<div style="font-size:0.75rem;color:var(--warn);margin-top:4px;">⚠ Will lose Beyond Suspicion</div>' : ''}
+      </div>`;
+    }
+
+    return `<div class="room-player-row">
+      <div class="room-player-name">${esc(p.name)}${chips}</div>
+      ${pickUI}
+      ${p.beyondSuspicion && !forcedNoPick && currentPick !== 'none' && currentPick !== '' ? '<div style="font-size:0.75rem;color:var(--warn);margin-top:4px;">⚠ Will lose Beyond Suspicion</div>' : ''}
     </div>`;
   }).join('');
 
-  // Validate: all non-skippable players must have a pick
+  // Validate: all players must have a valid pick assignment
   const allValid = room.every(i => {
     const canSkip = S.players[i].beyondSuspicion || S.players[i].hasWeapon;
+    const targets = room.filter(j => j !== i && !S.players[j].beyondSuspicion);
     const pick = picks[i];
+    // If no valid targets, forced no-pick is always valid
+    if (targets.length === 0) return true;
     if (canSkip) return pick !== undefined; // 'none' is valid
     return pick !== undefined && pick !== '' && pick !== 'none';
   });
@@ -688,7 +710,14 @@ function goToRoomPicks() {
   for (const i of S.room.playerIndices) {
     const p = S.players[i];
     const canSkip = p.beyondSuspicion || p.hasWeapon;
-    S.room.picks[i] = canSkip ? 'none' : '';
+    // Check if this player has any valid targets (non-BS players in room besides themselves)
+    const targets = S.room.playerIndices.filter(j => j !== i && !S.players[j].beyondSuspicion);
+    if (targets.length === 0) {
+      // No valid targets — force "no pick" regardless of weapon/BS status
+      S.room.picks[i] = 'none';
+    } else {
+      S.room.picks[i] = canSkip ? 'none' : '';
+    }
   }
   S.screen = 'room-picks';
   render();
