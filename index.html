@@ -591,8 +591,9 @@ function encounterResultText(enc) {
   switch (enc.result) {
     case 'p1_infected': return `☣ ${esc(state.players[enc.p1].name)} was infected!`;
     case 'p2_infected': return `☣ ${esc(state.players[enc.p2].name)} was infected!`;
-    case 'both_thing': return 'Both already Things — no change';
+    case 'both_thing': return 'Both Things — no status change';
     case 'both_human': return 'Both Human — no change';
+    case 'no_change': return 'Thing encountered but did not infect';
     default: return 'No infection spread';
   }
 }
@@ -677,6 +678,7 @@ function renderMain() {
                 ${p.infectedOnRound !== null ? 'Infected R' + p.infectedOnRound : 'Not infected'}
                 ${p.informed ? ' · Informed R' + p.informedOnRound : p.status === 'thing' ? ' · NOT yet informed' : ''}
                 ${p.lastCheckedInRound ? ' · Last check-in R' + p.lastCheckedInRound : ''}
+                ${p.status === 'thing' ? ' · Charge: ' + getThingChargeState(i) : ''}
               </div>
             </div>
             <span class="status-badge ${p.status === 'thing' ? 'status-thing' : p.status === 'revealed' ? 'status-revealed' : 'status-human'}">
@@ -766,7 +768,7 @@ function renderMain() {
       </div>
       ${revealedHtml}
       <div style="margin-bottom:12px;">
-        <button class="btn btn-secondary" onclick="goToEncounter()" ${active.length < 2 ? 'disabled' : ''}>⚔️ Encounter</button>
+        <button class="btn btn-secondary" onclick="goToEncounter()" ${getEligiblePlayers().length < 2 ? 'disabled' : ''}>⚔️ Encounter</button>
       </div>
       ${encHtml}
       ${allEncHtml}
@@ -778,8 +780,27 @@ function renderMain() {
 }
 
 function renderEncounter() {
-  const active = getActivePlayerIndices();
-  const valid = state.encounterP1 !== null && state.encounterP2 !== null && state.encounterP1 !== state.encounterP2;
+  const eligible = getEligiblePlayers();
+  const valid = isPairValid(state.encounterP1, state.encounterP2);
+
+  // Build warnings
+  let warning = '';
+  if (state.encounterP1 !== null && state.encounterP2 !== null) {
+    if (state.encounterP1 === state.encounterP2) {
+      warning = '⚠ Select two different players.';
+    } else if (pairAlreadyEncountered(state.encounterP1, state.encounterP2)) {
+      warning = '⚠ This pair has already had an encounter this round.';
+    }
+  }
+
+  // For P2 dropdown, filter out: same as P1, already paired with P1, or at max encounters
+  const p2Eligible = eligible.filter(i => {
+    if (state.encounterP1 === null) return true;
+    if (i === state.encounterP1) return false;
+    if (pairAlreadyEncountered(state.encounterP1, i)) return false;
+    return true;
+  });
+
   return `
     <div class="fade-in">
       <div class="header-bar">
@@ -789,19 +810,19 @@ function renderEncounter() {
       <div class="card">
         <div class="encounter-select">
           <label>Player 1</label>
-          <select onchange="state.encounterP1=this.value?parseInt(this.value):null;render()">
+          <select onchange="state.encounterP1=this.value?parseInt(this.value):null;state.encounterP2=null;render()">
             <option value="">Select player...</option>
-            ${active.map(i => `<option value="${i}" ${state.encounterP1===i?'selected':''}>${esc(state.players[i].name)}</option>`).join('')}
+            ${eligible.map(i => `<option value="${i}" ${state.encounterP1===i?'selected':''}>${esc(state.players[i].name)}</option>`).join('')}
           </select>
         </div>
         <div class="encounter-select">
           <label>Player 2</label>
           <select onchange="state.encounterP2=this.value?parseInt(this.value):null;render()">
             <option value="">Select player...</option>
-            ${active.map(i => `<option value="${i}" ${state.encounterP2===i?'selected':''}>${esc(state.players[i].name)}</option>`).join('')}
+            ${p2Eligible.map(i => `<option value="${i}" ${state.encounterP2===i?'selected':''}>${esc(state.players[i].name)}</option>`).join('')}
           </select>
         </div>
-        ${state.encounterP1!==null&&state.encounterP2!==null&&state.encounterP1===state.encounterP2?'<p style="color:var(--accent-glow);font-size:0.85rem;">⚠ Select two different players.</p>':''}
+        ${warning ? `<p style="color:var(--accent-glow);font-size:0.85rem;">${warning}</p>` : ''}
         <div class="gap-md"></div>
         <button class="btn btn-primary" ${!valid?'disabled':''} onclick="resolveEncounter()">Resolve Encounter</button>
         <div class="gap-sm"></div>
@@ -900,6 +921,7 @@ function startGame() {
   state.players[idx].infectedOnRound = 0;
   state.round = 1;
   state.encounters = [];
+  state._rollsThisRound = {};
   snapshotStartOfRound();
   state.screen = 'main';
   render();
@@ -913,6 +935,39 @@ function snapshotStartOfRound() {
   }
 }
 
+// ─── Encounter constraint helpers ───
+
+// Get encounters this round
+function getRoundEncounters() {
+  return state.encounters.filter(e => e.round === state.round);
+}
+
+// How many encounters has this player had this round?
+function playerEncounterCount(playerIdx) {
+  return getRoundEncounters().filter(e => e.p1 === playerIdx || e.p2 === playerIdx).length;
+}
+
+// Has this specific pair already had an encounter this round?
+function pairAlreadyEncountered(a, b) {
+  return getRoundEncounters().some(e =>
+    (e.p1 === a && e.p2 === b) || (e.p1 === b && e.p2 === a)
+  );
+}
+
+// Get list of players eligible for encounter selection.
+// A player is eligible if: active, and has fewer than 2 encounters this round.
+function getEligiblePlayers() {
+  return getActivePlayerIndices().filter(i => playerEncounterCount(i) < 2);
+}
+
+// Check if a specific pair is valid (eligible + not already paired this round)
+function isPairValid(a, b) {
+  if (a === null || b === null || a === b) return false;
+  if (playerEncounterCount(a) >= 2 || playerEncounterCount(b) >= 2) return false;
+  if (pairAlreadyEncountered(a, b)) return false;
+  return true;
+}
+
 function goToEncounter() {
   state.encounterP1 = null;
   state.encounterP2 = null;
@@ -923,29 +978,91 @@ function goToEncounter() {
 function resolveEncounter() {
   const p1 = state.players[state.encounterP1];
   const p2 = state.players[state.encounterP2];
+
+  if (p1.status === 'human' && p2.status === 'human') {
+    state.encounters.push({ round: state.round, p1: state.encounterP1, p2: state.encounterP2, result: 'both_human' });
+    state.screen = 'main';
+    render();
+    return;
+  }
+
+  // At least one player is a Thing. Determine infection roll for each Thing involved.
+  // For each Thing: check their charge state from prior encounters THIS round.
+  //   'available' = no prior encounter → 50/50 roll
+  //   'will_infect' = prior encounter didn't infect → this one definitely does
+  //   'spent' = prior encounter infected → this one definitely doesn't
+  // The roll/charge is consumed regardless of the target's status.
+
   let result = 'no_change';
 
-  if (p1.status === 'thing' && p2.status === 'thing') {
-    result = 'both_thing';
-  } else if (p1.status === 'human' && p2.status === 'human') {
-    result = 'both_human';
-  } else if (p1.status === 'thing' && p2.status === 'human') {
-    if (Math.random() < 0.5) {
+  // Handle each possible Thing in the encounter
+  if (p1.status === 'thing') {
+    const charge = getThingChargeState(state.encounterP1);
+    let rollInfects;
+    if (charge === 'spent') {
+      rollInfects = false;
+    } else if (charge === 'will_infect') {
+      rollInfects = true;
+    } else {
+      rollInfects = Math.random() < 0.5;
+    }
+
+    if (rollInfects && p2.status === 'human') {
       p2.status = 'thing';
       p2.infectedOnRound = state.round;
       result = 'p2_infected';
+    } else if (rollInfects && p2.status === 'thing') {
+      result = 'both_thing'; // "infected" another Thing — no status change
     }
-  } else if (p2.status === 'thing' && p1.status === 'human') {
-    if (Math.random() < 0.5) {
+
+    // Record the roll for this Thing (used by getThingChargeState)
+    // We store it as a tag on the encounter so charge state can be derived
+    // We'll use a _rolls map for this
+    if (!state._rollsThisRound) state._rollsThisRound = {};
+    if (!state._rollsThisRound[state.encounterP1]) state._rollsThisRound[state.encounterP1] = [];
+    state._rollsThisRound[state.encounterP1].push(rollInfects);
+  }
+
+  if (p2.status === 'thing') {
+    const charge = getThingChargeState(state.encounterP2);
+    let rollInfects;
+    if (charge === 'spent') {
+      rollInfects = false;
+    } else if (charge === 'will_infect') {
+      rollInfects = true;
+    } else {
+      rollInfects = Math.random() < 0.5;
+    }
+
+    if (rollInfects && p1.status === 'human') {
       p1.status = 'thing';
       p1.infectedOnRound = state.round;
       result = 'p1_infected';
+    } else if (rollInfects && p1.status === 'thing' && result !== 'p2_infected') {
+      result = 'both_thing';
     }
+
+    if (!state._rollsThisRound) state._rollsThisRound = {};
+    if (!state._rollsThisRound[state.encounterP2]) state._rollsThisRound[state.encounterP2] = [];
+    state._rollsThisRound[state.encounterP2].push(rollInfects);
   }
 
   state.encounters.push({ round: state.round, p1: state.encounterP1, p2: state.encounterP2, result });
   state.screen = 'main';
   render();
+}
+
+// Determine the infection charge state for a Thing player this round.
+// Based on their rolls stored in _rollsThisRound.
+// 'available' — no encounters yet this round
+// 'will_infect' — first encounter rolled false (didn't infect), so second is guaranteed
+// 'spent' — first encounter rolled true (infected), so second cannot infect
+function getThingChargeState(playerIdx) {
+  if (!state._rollsThisRound || !state._rollsThisRound[playerIdx]) return 'available';
+  const rolls = state._rollsThisRound[playerIdx];
+  if (rolls.length === 0) return 'available';
+  // First roll determines second encounter
+  return rolls[0] ? 'spent' : 'will_infect';
 }
 
 function confirmEndRound() {
@@ -1020,6 +1137,7 @@ function dismissReveal() {
 
 function advanceRound() {
   state.round++;
+  state._rollsThisRound = {};
   snapshotStartOfRound();
   state.screen = 'main';
   render();
@@ -1040,7 +1158,7 @@ function confirmReset() {
       const dbg = state.debug;
       state = { screen:'setup-count', playerCount:0, players:[], round:1, encounters:[],
                 encounterP1:null, encounterP2:null, informQueue:[], informDone:null,
-                revealPlayerIdx:null, _revealOverride:null, debug:dbg, confirmModal:null };
+                revealPlayerIdx:null, _revealOverride:null, _rollsThisRound:{}, debug:dbg, confirmModal:null };
       render();
     }
   };
