@@ -9,450 +9,111 @@
 <meta name="theme-color" content="#0a0a0f">
 <title>Thing Tracker</title>
 <style>
-  :root {
-    --bg: #0a0a0f;
-    --bg2: #12121a;
-    --bg3: #1a1a25;
-    --surface: #1e1e2a;
-    --surface2: #252535;
-    --border: #2a2a3a;
-    --text: #e0dde6;
-    --text-dim: #8885a0;
-    --accent: #c62828;
-    --accent-glow: #e53935;
-    --accent-dim: #7f1d1d;
-    --human: #2e7d32;
-    --human-glow: #43a047;
-    --warn: #f9a825;
-    --radius: 12px;
-    --safe-top: env(safe-area-inset-top, 20px);
-    --safe-bottom: env(safe-area-inset-bottom, 20px);
-  }
+:root {
+  --bg: #0a0a0f; --bg2: #12121a; --bg3: #1a1a25;
+  --surface: #1e1e2a; --surface2: #252535; --border: #2a2a3a;
+  --text: #e0dde6; --text-dim: #8885a0;
+  --accent: #c62828; --accent-glow: #e53935; --accent-dim: #7f1d1d;
+  --human: #2e7d32; --human-glow: #43a047;
+  --warn: #f9a825; --blue: #1565c0; --blue-glow: #42a5f5;
+  --radius: 12px;
+  --safe-top: env(safe-area-inset-top, 20px);
+  --safe-bottom: env(safe-area-inset-bottom, 20px);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+  background: var(--bg); color: var(--text);
+  min-height: 100dvh; overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+  padding-top: var(--safe-top); padding-bottom: var(--safe-bottom);
+}
+body::before {
+  content:''; position:fixed; top:-50%; left:-50%; width:200%; height:200%;
+  background: radial-gradient(ellipse at 30% 20%, rgba(198,40,40,0.06) 0%, transparent 50%),
+              radial-gradient(ellipse at 70% 80%, rgba(198,40,40,0.04) 0%, transparent 50%);
+  animation: ambientShift 20s ease-in-out infinite; pointer-events:none; z-index:0;
+}
+@keyframes ambientShift { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-5%,3%)} }
+#app { position:relative; z-index:1; max-width:480px; margin:0 auto; padding:16px; min-height:100dvh; }
+h1 { font-size:1.6rem; font-weight:700; text-align:center; margin-bottom:4px; letter-spacing:2px; text-transform:uppercase; color:var(--accent-glow); text-shadow:0 0 20px rgba(229,57,53,0.4); }
+h2 { font-size:1.1rem; font-weight:600; margin-bottom:12px; color:var(--text); }
+.subtitle { text-align:center; color:var(--text-dim); font-size:0.8rem; letter-spacing:3px; text-transform:uppercase; margin-bottom:24px; }
+.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px; margin-bottom:16px; }
+.btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:14px 24px; border:none; border-radius:var(--radius); font-size:1rem; font-weight:600; cursor:pointer; transition:all 0.2s; width:100%; -webkit-appearance:none; }
+.btn-primary { background:var(--accent); color:#fff; box-shadow:0 4px 15px rgba(198,40,40,0.3); }
+.btn-primary:active { background:var(--accent-dim); transform:scale(0.98); }
+.btn-primary:disabled { background:var(--surface2); color:var(--text-dim); box-shadow:none; cursor:default; }
+.btn-secondary { background:var(--surface2); color:var(--text); border:1px solid var(--border); }
+.btn-secondary:active { background:var(--bg3); transform:scale(0.98); }
+.btn-danger { background:transparent; color:var(--accent-glow); border:1px solid var(--accent-dim); }
+.btn-danger:active { background:var(--accent-dim); }
+.btn-small { padding:8px 16px; font-size:0.85rem; width:auto; }
+input,select { width:100%; padding:12px 16px; background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); color:var(--text); font-size:1rem; outline:none; -webkit-appearance:none; }
+input:focus,select:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(198,40,40,0.15); }
+.player-count-picker { display:flex; gap:8px; justify-content:center; margin:16px 0; }
+.player-count-picker button { width:52px; height:52px; border-radius:50%; border:2px solid var(--border); background:var(--surface); color:var(--text); font-size:1.2rem; font-weight:700; cursor:pointer; transition:all 0.2s; }
+.player-count-picker button.selected { border-color:var(--accent-glow); background:var(--accent-dim); color:#fff; box-shadow:0 0 12px rgba(229,57,53,0.3); }
+.name-input-row { display:flex; gap:8px; align-items:center; margin-bottom:10px; }
+.name-input-row span { color:var(--text-dim); font-size:0.85rem; min-width:24px; }
+.round-badge { display:inline-flex; align-items:center; gap:6px; background:var(--surface2); border:1px solid var(--border); border-radius:20px; padding:6px 16px; font-size:0.85rem; color:var(--text-dim); font-weight:600; }
+.round-badge .num { color:var(--accent-glow); font-size:1.1rem; }
+.header-bar { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+.player-list-item { display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); margin-bottom:8px; }
+.player-list-item .name { font-weight:600; font-size:1rem; }
+.status-badge { font-size:0.75rem; font-weight:600; letter-spacing:1px; text-transform:uppercase; padding:4px 10px; border-radius:8px; }
+.status-human { color:var(--human-glow); background:rgba(46,125,50,0.15); }
+.status-thing { color:var(--accent-glow); background:rgba(198,40,40,0.15); }
+.status-revealed { color:var(--warn); background:rgba(249,168,37,0.15); }
+.status-beyond { color:var(--blue-glow); background:rgba(21,101,192,0.15); }
+.inform-tag { font-size:0.7rem; color:var(--text-dim); margin-top:2px; }
+.inform-tag.soon { color:var(--warn); }
+.screen-overlay { position:fixed; top:0; left:0; right:0; bottom:0; background:var(--bg); z-index:100; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:32px; text-align:center; }
+.reveal-icon { font-size:4rem; margin-bottom:16px; }
+.reveal-status { font-size:1.8rem; font-weight:800; letter-spacing:2px; text-transform:uppercase; margin-bottom:8px; }
+.reveal-status.thing { color:var(--accent-glow); text-shadow:0 0 30px rgba(229,57,53,0.5); }
+.reveal-status.human { color:var(--human-glow); text-shadow:0 0 30px rgba(67,160,71,0.5); }
+.reveal-flavor { color:var(--text-dim); font-size:0.95rem; margin-bottom:32px; line-height:1.5; }
+.player-select-list button { display:block; width:100%; padding:16px; margin-bottom:8px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); color:var(--text); font-size:1.1rem; font-weight:600; cursor:pointer; text-align:left; transition:all 0.15s; }
+.player-select-list button:active { background:var(--surface2); transform:scale(0.98); }
+.debug-switch { position:fixed; bottom:10px; right:10px; z-index:50; display:flex; align-items:center; gap:4px; opacity:0.2; transition:opacity 0.3s; }
+.debug-switch:hover,.debug-switch:active,.debug-switch.active { opacity:0.85; }
+.debug-switch label { font-size:0.55rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px; cursor:pointer; user-select:none; }
+.debug-switch.active label { color:var(--accent-glow); }
+.toggle-track { width:28px; height:16px; border-radius:8px; background:var(--surface2); border:1px solid var(--border); position:relative; cursor:pointer; transition:all 0.2s; }
+.toggle-track.on { background:var(--accent-dim); border-color:var(--accent); }
+.toggle-knob { width:12px; height:12px; border-radius:50%; background:var(--text-dim); position:absolute; top:1px; left:1px; transition:all 0.2s; }
+.toggle-track.on .toggle-knob { left:13px; background:var(--accent-glow); }
+.debug-panel { background:rgba(198,40,40,0.08); border:1px solid var(--accent-dim); border-radius:var(--radius); padding:12px 16px; margin-bottom:16px; }
+.debug-panel h3 { color:var(--accent-glow); font-size:0.75rem; letter-spacing:2px; text-transform:uppercase; margin-bottom:8px; }
+.debug-row { display:flex; justify-content:space-between; align-items:center; padding:4px 0; border-bottom:1px solid rgba(255,255,255,0.05); }
+.debug-row:last-child { border:none; }
+.debug-detail { font-size:0.7rem; color:var(--text-dim); }
+.encounter-log-item { font-size:0.8rem; color:var(--text-dim); padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.03); }
+.encounter-log-item:last-child { border:none; }
+.encounter-result { font-size:0.7rem; margin-top:2px; }
+.encounter-result.infected { color:var(--accent-glow); }
+.encounter-result.safe { color:var(--human-glow); }
+.encounter-result.no-risk { color:var(--text-dim); }
+.confirm-modal { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.7); z-index:90; display:flex; align-items:center; justify-content:center; padding:24px; }
+.confirm-modal .modal-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:24px; max-width:340px; width:100%; text-align:center; }
+.confirm-modal .modal-card p { margin-bottom:20px; color:var(--text); line-height:1.5; }
+.confirm-modal .modal-btns { display:flex; gap:10px; }
+.gap-sm { height:8px; } .gap-md { height:16px; }
+.fade-in { animation:fadeIn 0.3s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
 
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100dvh;
-    overflow-x: hidden;
-    -webkit-tap-highlight-color: transparent;
-    padding-top: var(--safe-top);
-    padding-bottom: var(--safe-bottom);
-  }
-
-  body::before {
-    content: '';
-    position: fixed;
-    top: -50%; left: -50%;
-    width: 200%; height: 200%;
-    background: radial-gradient(ellipse at 30% 20%, rgba(198,40,40,0.06) 0%, transparent 50%),
-                radial-gradient(ellipse at 70% 80%, rgba(198,40,40,0.04) 0%, transparent 50%);
-    animation: ambientShift 20s ease-in-out infinite;
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  @keyframes ambientShift {
-    0%, 100% { transform: translate(0, 0); }
-    50% { transform: translate(-5%, 3%); }
-  }
-
-  #app {
-    position: relative;
-    z-index: 1;
-    max-width: 480px;
-    margin: 0 auto;
-    padding: 16px;
-    min-height: 100dvh;
-  }
-
-  h1 {
-    font-size: 1.6rem;
-    font-weight: 700;
-    text-align: center;
-    margin-bottom: 4px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: var(--accent-glow);
-    text-shadow: 0 0 20px rgba(229,57,53,0.4);
-  }
-
-  h2 {
-    font-size: 1.1rem;
-    font-weight: 600;
-    margin-bottom: 12px;
-    color: var(--text);
-  }
-
-  .subtitle {
-    text-align: center;
-    color: var(--text-dim);
-    font-size: 0.8rem;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    margin-bottom: 24px;
-  }
-
-  .card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 20px;
-    margin-bottom: 16px;
-  }
-
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 14px 24px;
-    border: none;
-    border-radius: var(--radius);
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-    width: 100%;
-    -webkit-appearance: none;
-  }
-
-  .btn-primary {
-    background: var(--accent);
-    color: #fff;
-    box-shadow: 0 4px 15px rgba(198,40,40,0.3);
-  }
-  .btn-primary:active { background: var(--accent-dim); transform: scale(0.98); }
-  .btn-primary:disabled { background: var(--surface2); color: var(--text-dim); box-shadow: none; cursor: default; }
-
-  .btn-secondary {
-    background: var(--surface2);
-    color: var(--text);
-    border: 1px solid var(--border);
-  }
-  .btn-secondary:active { background: var(--bg3); transform: scale(0.98); }
-
-  .btn-danger {
-    background: transparent;
-    color: var(--accent-glow);
-    border: 1px solid var(--accent-dim);
-  }
-  .btn-danger:active { background: var(--accent-dim); }
-
-  .btn-small {
-    padding: 8px 16px;
-    font-size: 0.85rem;
-    width: auto;
-  }
-
-  input, select {
-    width: 100%;
-    padding: 12px 16px;
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    color: var(--text);
-    font-size: 1rem;
-    outline: none;
-    -webkit-appearance: none;
-  }
-  input:focus, select:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(198,40,40,0.15);
-  }
-
-  .player-count-picker {
-    display: flex;
-    gap: 8px;
-    justify-content: center;
-    margin: 16px 0;
-  }
-  .player-count-picker button {
-    width: 52px; height: 52px;
-    border-radius: 50%;
-    border: 2px solid var(--border);
-    background: var(--surface);
-    color: var(--text);
-    font-size: 1.2rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  .player-count-picker button.selected {
-    border-color: var(--accent-glow);
-    background: var(--accent-dim);
-    color: #fff;
-    box-shadow: 0 0 12px rgba(229,57,53,0.3);
-  }
-
-  .name-input-row {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    margin-bottom: 10px;
-  }
-  .name-input-row span {
-    color: var(--text-dim);
-    font-size: 0.85rem;
-    min-width: 24px;
-  }
-
-  .round-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 6px 16px;
-    font-size: 0.85rem;
-    color: var(--text-dim);
-    font-weight: 600;
-  }
-  .round-badge .num {
-    color: var(--accent-glow);
-    font-size: 1.1rem;
-  }
-
-  .header-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
-  }
-
-  .player-list-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 16px;
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    margin-bottom: 8px;
-  }
-  .player-list-item .name {
-    font-weight: 600;
-    font-size: 1rem;
-  }
-
-  .status-badge {
-    font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    padding: 4px 10px;
-    border-radius: 8px;
-  }
-  .status-human { color: var(--human-glow); background: rgba(46,125,50,0.15); }
-  .status-thing { color: var(--accent-glow); background: rgba(198,40,40,0.15); }
-  .status-revealed { color: var(--warn); background: rgba(249,168,37,0.15); }
-
-  .inform-tag {
-    font-size: 0.7rem;
-    color: var(--text-dim);
-    margin-top: 2px;
-  }
-  .inform-tag.soon { color: var(--warn); }
-
-  .encounter-select {
-    margin-bottom: 12px;
-  }
-  .encounter-select label {
-    display: block;
-    font-size: 0.85rem;
-    color: var(--text-dim);
-    margin-bottom: 6px;
-  }
-
-  .screen-overlay {
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: var(--bg);
-    z-index: 100;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 32px;
-    text-align: center;
-  }
-
-  .reveal-icon { font-size: 4rem; margin-bottom: 16px; }
-
-  .reveal-status {
-    font-size: 1.8rem;
-    font-weight: 800;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    margin-bottom: 8px;
-  }
-  .reveal-status.thing {
-    color: var(--accent-glow);
-    text-shadow: 0 0 30px rgba(229,57,53,0.5);
-  }
-  .reveal-status.human {
-    color: var(--human-glow);
-    text-shadow: 0 0 30px rgba(67,160,71,0.5);
-  }
-
-  .reveal-flavor {
-    color: var(--text-dim);
-    font-size: 0.95rem;
-    margin-bottom: 32px;
-    line-height: 1.5;
-  }
-
-  .player-select-list button {
-    display: block;
-    width: 100%;
-    padding: 16px;
-    margin-bottom: 8px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    color: var(--text);
-    font-size: 1.1rem;
-    font-weight: 600;
-    cursor: pointer;
-    text-align: left;
-    transition: all 0.15s;
-  }
-  .player-select-list button:active {
-    background: var(--surface2);
-    transform: scale(0.98);
-  }
-
-  /* Debug toggle */
-  .debug-switch {
-    position: fixed;
-    bottom: 10px;
-    right: 10px;
-    z-index: 50;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    opacity: 0.2;
-    transition: opacity 0.3s;
-  }
-  .debug-switch:hover, .debug-switch:active, .debug-switch.active { opacity: 0.85; }
-  .debug-switch label {
-    font-size: 0.55rem;
-    color: var(--text-dim);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    cursor: pointer;
-    user-select: none;
-  }
-  .debug-switch.active label { color: var(--accent-glow); }
-
-  .toggle-track {
-    width: 28px; height: 16px;
-    border-radius: 8px;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    position: relative;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  .toggle-track.on {
-    background: var(--accent-dim);
-    border-color: var(--accent);
-  }
-  .toggle-knob {
-    width: 12px; height: 12px;
-    border-radius: 50%;
-    background: var(--text-dim);
-    position: absolute;
-    top: 1px; left: 1px;
-    transition: all 0.2s;
-  }
-  .toggle-track.on .toggle-knob {
-    left: 13px;
-    background: var(--accent-glow);
-  }
-
-  .debug-panel {
-    background: rgba(198,40,40,0.08);
-    border: 1px solid var(--accent-dim);
-    border-radius: var(--radius);
-    padding: 12px 16px;
-    margin-bottom: 16px;
-  }
-  .debug-panel h3 {
-    color: var(--accent-glow);
-    font-size: 0.75rem;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    margin-bottom: 8px;
-  }
-  .debug-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 4px 0;
-    border-bottom: 1px solid rgba(255,255,255,0.05);
-  }
-  .debug-row:last-child { border: none; }
-  .debug-detail {
-    font-size: 0.7rem;
-    color: var(--text-dim);
-  }
-
-  .encounter-log-item {
-    font-size: 0.8rem;
-    color: var(--text-dim);
-    padding: 6px 0;
-    border-bottom: 1px solid rgba(255,255,255,0.03);
-  }
-  .encounter-log-item:last-child { border: none; }
-  .encounter-result {
-    font-size: 0.7rem;
-    margin-top: 2px;
-  }
-  .encounter-result.infected { color: var(--accent-glow); }
-  .encounter-result.safe { color: var(--human-glow); }
-  .encounter-result.no-risk { color: var(--text-dim); }
-
-  .confirm-modal {
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.7);
-    z-index: 90;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
-  }
-  .confirm-modal .modal-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 24px;
-    max-width: 340px;
-    width: 100%;
-    text-align: center;
-  }
-  .confirm-modal .modal-card p {
-    margin-bottom: 20px;
-    color: var(--text);
-    line-height: 1.5;
-  }
-  .confirm-modal .modal-btns {
-    display: flex;
-    gap: 10px;
-  }
-
-  .gap-sm { height: 8px; }
-  .gap-md { height: 16px; }
-
-  .fade-in { animation: fadeIn 0.3s ease; }
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
+/* Room encounter styles */
+.room-player-row { padding:10px 14px; background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); margin-bottom:8px; }
+.room-player-name { font-weight:600; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center; }
+.room-pick-row { display:flex; align-items:center; gap:8px; }
+.room-pick-row label { font-size:0.8rem; color:var(--text-dim); white-space:nowrap; }
+.room-pick-row select { flex:1; padding:8px 12px; font-size:0.9rem; }
+.chip { display:inline-block; padding:2px 8px; border-radius:6px; font-size:0.7rem; font-weight:600; letter-spacing:0.5px; }
+.chip-beyond { color:var(--blue-glow); background:rgba(21,101,192,0.2); }
+.chip-weapon { color:var(--warn); background:rgba(249,168,37,0.15); }
+.player-action-btns { display:flex; gap:6px; flex-wrap:wrap; }
+.player-action-btns .btn-small { font-size:0.75rem; padding:5px 10px; }
 </style>
 </head>
 <body>
@@ -461,617 +122,597 @@
 
 <div class="debug-switch" id="debugSwitch" onclick="toggleDebug()">
   <label>dbg</label>
-  <div class="toggle-track" id="debugTrack">
-    <div class="toggle-knob"></div>
-  </div>
+  <div class="toggle-track" id="debugTrack"><div class="toggle-knob"></div></div>
 </div>
 
 <script>
 // ─── State ───
-let state = {
+// Player: { name, status:'human'|'thing'|'revealed', statusAtStartOfRound,
+//           infectedOnRound, informed, informedOnRound, lastCheckedInRound,
+//           beyondSuspicion:bool, hasWeapon:bool, inEncounterThisRound:bool }
+let S = {
   screen: 'setup-count',
   playerCount: 0,
   players: [],
   round: 1,
-  encounters: [],
-  encounterP1: null,
-  encounterP2: null,
-  informQueue: [],
-  informDone: null, // Set of player indices already checked in this end-of-round
-  revealPlayerIdx: null,
-  _revealOverride: null,
+  encounters: [], // { round, room:[idx,...], picks:[{picker,target},...], results:[string,...] }
   debug: false,
   confirmModal: null,
+  // Room encounter building state
+  room: { playerIndices:[], picks:{} }, // picks: { pickerIdx: targetIdx | 'none' }
+  // End-of-round inform
+  informQueue: [],
+  informDone: null,
+  revealPlayerIdx: null,
+  _revealOverride: null,
 };
 
-// Player shape:
-// { name, status: 'human'|'thing'|'revealed',
-//   infectedOnRound: null|number, informed: bool, informedOnRound: null|number,
-//   lastCheckedInRound: null|number }
-
-const thingFlavors = [
-  "You are not what you seem...",
-  "The hunger grows inside you.",
-  "Trust no one. Assimilate everyone.",
-  "Your cells have been rewritten.",
-  "You wear their face now.",
-];
-const humanFlavors = [
-  "You're still human... for now.",
-  "Stay alert. Trust no one.",
-  "The cold bites, but you endure.",
-  "Keep your flamethrower close.",
-  "You are who you've always been.",
-];
+const thingFlavors = ["You are not what you seem...","The hunger grows inside you.","Trust no one. Assimilate everyone.","Your cells have been rewritten.","You wear their face now."];
+const humanFlavors = ["You're still human... for now.","Stay alert. Trust no one.","The cold bites, but you endure.","Keep your flamethrower close.","You are who you've always been."];
 
 function toggleDebug() {
-  state.debug = !state.debug;
-  document.getElementById('debugSwitch').classList.toggle('active', state.debug);
-  document.getElementById('debugTrack').classList.toggle('on', state.debug);
+  S.debug = !S.debug;
+  document.getElementById('debugSwitch').classList.toggle('active', S.debug);
+  document.getElementById('debugTrack').classList.toggle('on', S.debug);
   render();
 }
 
+function esc(s) { const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
+
+// ─── Helpers ───
+
 function getActivePlayerIndices() {
-  return state.players.map((_, i) => i).filter(i => state.players[i].status !== 'revealed');
+  return S.players.map((_,i)=>i).filter(i=>S.players[i].status!=='revealed');
 }
 
-// Build the check-in list for end of round.
-// Round 1: ALL active players (anyone could be the initial Thing).
-// Round 2+: a player appears if they had an encounter in a PREVIOUS round
-//   and haven't checked in since. Encounter in round N → check-in at end of N+1.
-//   Uninformed Things who are due are also forced onto the list.
+// Players eligible for room placement: active and not yet in an encounter this round
+function getAvailableForRoom() {
+  return getActivePlayerIndices().filter(i => !S.players[i].inEncounterThisRound);
+}
+
+function snapshotStartOfRound() {
+  for (const p of S.players) p.statusAtStartOfRound = p.status;
+}
+
+// ─── Inform list logic ───
+// Round 1: all active players (anyone could be initial Thing)
+// Round 2+: players who had an encounter in a previous round and haven't checked in since,
+//   plus uninformed Things who are due.
 function buildInformList() {
   const active = getActivePlayerIndices();
-
-  // Round 1: everyone checks in (anyone could have been the initial Thing)
-  if (state.round === 1) {
-    return [...active];
-  }
+  if (S.round === 1) return [...active];
 
   const list = new Set();
-
   for (const i of active) {
-    const p = state.players[i];
-
-    // Thing who is due to be informed and hasn't been yet
-    // Initial Thing (infectedOnRound 0): due end of round 1 (handled above).
-    // Infected on round R: due end of round R+1.
+    const p = S.players[i];
+    // Uninformed Thing who is due
     if (p.status === 'thing' && !p.informed) {
       const dueRound = (p.infectedOnRound === 0) ? 1 : p.infectedOnRound + 1;
-      if (state.round >= dueRound) {
-        list.add(i);
-      }
+      if (S.round >= dueRound) list.add(i);
     }
-
-    // Player had an encounter in a PREVIOUS round (not current!) and
-    // hasn't checked in since that encounter. Encounters this round
-    // won't trigger a check-in until end of NEXT round.
+    // Player had encounter in a previous round and hasn't checked in since
     const lastChecked = p.lastCheckedInRound || 0;
-    const needsCheckIn = state.encounters.some(e =>
-      (e.p1 === i || e.p2 === i) &&
-      e.round < state.round &&
-      e.round > lastChecked
+    const needsCheckIn = S.encounters.some(e =>
+      e.room.includes(i) && e.room.length >= 2 &&
+      e.round < S.round && e.round > lastChecked
     );
-    if (needsCheckIn) {
-      list.add(i);
-    }
+    if (needsCheckIn) list.add(i);
   }
-
   return [...list];
 }
 
-// Players who will need check-in next round (for display hint on main screen)
 function getPlayersToInformNextRound() {
   const next = new Set();
-  for (let i = 0; i < state.players.length; i++) {
-    const p = state.players[i];
+  for (let i = 0; i < S.players.length; i++) {
+    const p = S.players[i];
     if (p.status === 'revealed') continue;
-
-    // Uninformed Things due next round
     if (p.status === 'thing' && !p.informed && p.infectedOnRound !== null) {
       const dueRound = (p.infectedOnRound === 0) ? 1 : p.infectedOnRound + 1;
-      if (dueRound === state.round + 1) {
-        next.add(i);
-      }
+      if (dueRound === S.round + 1) next.add(i);
     }
-
-    // Players who had an encounter THIS round will check in at end of next round
+    // Encounters this round trigger check-in next round
     const lastChecked = p.lastCheckedInRound || 0;
-    const hasCurrentRoundEncounter = state.encounters.some(e =>
-      (e.p1 === i || e.p2 === i) && e.round === state.round && state.round > lastChecked
+    const hasCurEnc = S.encounters.some(e =>
+      e.room.includes(i) && e.room.length >= 2 &&
+      e.round === S.round && S.round > lastChecked
     );
-    if (hasCurrentRoundEncounter) {
-      next.add(i);
-    }
+    if (hasCurEnc) next.add(i);
   }
   return [...next];
 }
 
-function encounterResultText(enc) {
-  switch (enc.result) {
-    case 'p1_infected': return `☣ ${esc(state.players[enc.p1].name)} was infected!`;
-    case 'p2_infected': return `☣ ${esc(state.players[enc.p2].name)} was infected!`;
-    case 'both_thing': return 'Both Things — no status change';
-    case 'both_human': return 'Both Human — no change';
-    case 'no_change': return 'Thing encountered but did not infect';
-    default: return 'No infection spread';
-  }
-}
+// ─── Room encounter resolution ───
+function resolveRoom() {
+  const room = S.room.playerIndices;
+  const picks = S.room.picks; // { pickerIdx: targetIdx | 'none' }
+  const results = [];
 
-function encounterResultClass(enc) {
-  if (enc.result === 'p1_infected' || enc.result === 'p2_infected') return 'infected';
-  if (enc.result === 'both_human') return 'safe';
-  return 'no-risk';
+  // Use start-of-round statuses for determining tokens
+  // Each Thing (at start of round) presents 1 Thing token + 1 Human token
+  // Each Human presents 2 Human tokens
+  // Beyond Suspicion players present no tokens
+
+  // Track how many people pick from each target
+  const picksFromTarget = {}; // targetIdx -> [pickerIdx, ...]
+  for (const pickerStr of Object.keys(picks)) {
+    const picker = parseInt(pickerStr);
+    const target = picks[pickerStr];
+    if (target === 'none') continue;
+    if (!picksFromTarget[target]) picksFromTarget[target] = [];
+    picksFromTarget[target].push(picker);
+  }
+
+  // For each target that is a Thing (at start of round), determine infection
+  // They have 1 Thing token among 2 total. If N players pick from them:
+  //   N=1: 50% chance that player gets the Thing token
+  //   N=2: exactly 1 gets the Thing token (random which one)
+  const infections = []; // [{ infected: pickerIdx, by: targetIdx }]
+
+  for (const targetStr of Object.keys(picksFromTarget)) {
+    const target = parseInt(targetStr);
+    const pickers = picksFromTarget[target];
+    const targetStartStatus = S.players[target].statusAtStartOfRound;
+
+    if (targetStartStatus !== 'thing') {
+      // Target is Human at start of round — all tokens are Human, no infections
+      for (const p of pickers) {
+        results.push(`${esc(S.players[p].name)} picked from ${esc(S.players[target].name)} — Human token`);
+      }
+      continue;
+    }
+
+    // Target is a Thing — 1 Thing token, 1 Human token
+    if (pickers.length === 1) {
+      // 50/50
+      if (Math.random() < 0.5) {
+        infections.push({ infected: pickers[0], by: target });
+        results.push(`${esc(S.players[pickers[0]].name)} picked from ${esc(S.players[target].name)} — ☣ THING token`);
+      } else {
+        results.push(`${esc(S.players[pickers[0]].name)} picked from ${esc(S.players[target].name)} — Human token`);
+      }
+    } else if (pickers.length === 2) {
+      // Exactly one gets the Thing token
+      const luckyIndex = Math.random() < 0.5 ? 0 : 1;
+      for (let k = 0; k < 2; k++) {
+        if (k === luckyIndex) {
+          infections.push({ infected: pickers[k], by: target });
+          results.push(`${esc(S.players[pickers[k]].name)} picked from ${esc(S.players[target].name)} — ☣ THING token`);
+        } else {
+          results.push(`${esc(S.players[pickers[k]].name)} picked from ${esc(S.players[target].name)} — Human token`);
+        }
+      }
+    }
+  }
+
+  // Also log players who didn't pick
+  for (const i of room) {
+    if (picks[i] === 'none' || picks[i] === undefined) {
+      results.push(`${esc(S.players[i].name)} did not pick a token`);
+    }
+  }
+
+  // Apply infections — only changes status if the picker is currently Human
+  for (const inf of infections) {
+    const p = S.players[inf.infected];
+    if (p.status === 'human' || p.status === 'human') { // actual current status
+      if (p.statusAtStartOfRound === 'human' && p.status === 'human') {
+        p.status = 'thing';
+        p.infectedOnRound = S.round;
+      }
+      // If they were already a Thing (became one this round from another room), no change
+    }
+  }
+
+  // Remove Beyond Suspicion from anyone who picked a token
+  for (const pickerStr of Object.keys(picks)) {
+    const picker = parseInt(pickerStr);
+    if (picks[pickerStr] !== 'none') {
+      S.players[picker].beyondSuspicion = false;
+    }
+  }
+
+  // Mark all room participants as having been in an encounter this round
+  for (const i of room) {
+    S.players[i].inEncounterThisRound = true;
+  }
+
+  // Save encounter record
+  S.encounters.push({
+    round: S.round,
+    room: [...room],
+    picks: {...picks},
+    results: results,
+  });
+
+  // Reset room state
+  S.room = { playerIndices: [], picks: {} };
+  S.screen = 'main';
+  render();
 }
 
 // ─── Render ───
 function render() {
   const app = document.getElementById('app');
-  switch (state.screen) {
+  switch (S.screen) {
     case 'setup-count': app.innerHTML = renderSetupCount(); break;
     case 'setup-names': app.innerHTML = renderSetupNames(); break;
     case 'main': app.innerHTML = renderMain(); break;
-    case 'encounter': app.innerHTML = renderEncounter(); break;
+    case 'room-select': app.innerHTML = renderRoomSelect(); break;
+    case 'room-picks': app.innerHTML = renderRoomPicks(); break;
     case 'end-round-select': app.innerHTML = renderEndRoundSelect(); break;
     case 'reveal-status': app.innerHTML = renderRevealStatus(); break;
     default: app.innerHTML = renderMain();
   }
-  if (state.confirmModal) app.innerHTML += renderConfirmModal();
+  if (S.confirmModal) app.innerHTML += renderConfirmModal();
 }
 
 function renderSetupCount() {
   return `
-    <div class="fade-in" style="padding-top: 60px;">
-      <h1>The Thing</h1>
-      <div class="subtitle">Infection Tracker</div>
+    <div class="fade-in" style="padding-top:60px;">
+      <h1>The Thing</h1><div class="subtitle">Infection Tracker</div>
       <div class="card">
         <h2 style="text-align:center;">How many players?</h2>
         <div class="player-count-picker">
-          ${[4,5,6,7,8].map(n => `
-            <button class="${state.playerCount === n ? 'selected' : ''}" onclick="selectCount(${n})">${n}</button>
-          `).join('')}
+          ${[4,5,6,7,8].map(n=>`<button class="${S.playerCount===n?'selected':''}" onclick="selectCount(${n})">${n}</button>`).join('')}
         </div>
         <div class="gap-md"></div>
-        <button class="btn btn-primary" ${!state.playerCount ? 'disabled' : ''} onclick="goToNames()">Continue</button>
+        <button class="btn btn-primary" ${!S.playerCount?'disabled':''} onclick="S.screen='setup-names';render()">Continue</button>
       </div>
     </div>`;
 }
 
 function renderSetupNames() {
-  const allFilled = state.players.length === state.playerCount && state.players.every(p => p.name.trim());
+  const allFilled = S.players.length===S.playerCount && S.players.every(p=>p.name.trim());
   return `
     <div class="fade-in">
-      <h1>The Thing</h1>
-      <div class="subtitle">Infection Tracker</div>
+      <h1>The Thing</h1><div class="subtitle">Infection Tracker</div>
       <div class="card">
         <h2>Enter Player Names</h2>
-        ${state.players.map((p, i) => `
-          <div class="name-input-row">
-            <span>${i+1}.</span>
+        ${S.players.map((p,i)=>`
+          <div class="name-input-row"><span>${i+1}.</span>
             <input type="text" placeholder="Player ${i+1}" value="${esc(p.name)}"
-                   oninput="updateName(${i}, this.value)" autocomplete="off" autocorrect="off" />
-          </div>
-        `).join('')}
+              oninput="updateName(${i},this.value)" autocomplete="off" autocorrect="off"/>
+          </div>`).join('')}
         <div class="gap-md"></div>
-        <button class="btn btn-primary" ${!allFilled ? 'disabled' : ''} onclick="startGame()">Start Game</button>
+        <button class="btn btn-primary" ${!allFilled?'disabled':''} onclick="startGame()">Start Game</button>
         <div class="gap-sm"></div>
-        <button class="btn btn-secondary" onclick="state.screen='setup-count';render()">Back</button>
+        <button class="btn btn-secondary" onclick="S.screen='setup-count';render()">Back</button>
       </div>
     </div>`;
 }
 
 function renderMain() {
   const active = getActivePlayerIndices();
+  const available = getAvailableForRoom();
   const informList = buildInformList();
   const informNext = getPlayersToInformNextRound();
 
+  // Debug
   let debugHtml = '';
-  if (state.debug) {
-    debugHtml = `
-      <div class="debug-panel">
-        <h3>🔧 Debug — True Status</h3>
-        ${state.players.map((p, i) => `
-          <div class="debug-row">
-            <div>
-              <span>${esc(p.name)}</span>
-              <div class="debug-detail">
-                ${p.infectedOnRound !== null ? 'Infected R' + p.infectedOnRound : 'Not infected'}
-                ${p.informed ? ' · Informed R' + p.informedOnRound : p.status === 'thing' ? ' · NOT yet informed' : ''}
-                ${p.lastCheckedInRound ? ' · Last check-in R' + p.lastCheckedInRound : ''}
-                ${p.status === 'thing' ? ' · Charge: ' + getThingChargeState(i) : ''}
-              </div>
-            </div>
-            <span class="status-badge ${p.status === 'thing' ? 'status-thing' : p.status === 'revealed' ? 'status-revealed' : 'status-human'}">
-              ${p.status.toUpperCase()}
-            </span>
-          </div>
-        `).join('')}
-      </div>`;
+  if (S.debug) {
+    debugHtml = `<div class="debug-panel"><h3>🔧 Debug — True Status</h3>
+      ${S.players.map((p,i)=>`<div class="debug-row"><div><span>${esc(p.name)}</span>
+        <div class="debug-detail">
+          ${p.infectedOnRound!==null?'Infected R'+p.infectedOnRound:'Not infected'}
+          ${p.informed?' · Informed R'+p.informedOnRound:p.status==='thing'?' · NOT yet informed':''}
+          ${p.lastCheckedInRound?' · Check-in R'+p.lastCheckedInRound:''}
+          ${p.beyondSuspicion?' · BEYOND SUSPICION':''}
+          ${p.hasWeapon?' · HAS WEAPON':''}
+        </div></div>
+        <span class="status-badge ${p.status==='thing'?'status-thing':p.status==='revealed'?'status-revealed':'status-human'}">${p.status.toUpperCase()}</span>
+      </div>`).join('')}</div>`;
   }
 
+  // Player rows
   const playerRows = active.map(i => {
-    const p = state.players[i];
+    const p = S.players[i];
     let tag = '';
-    if (informList.includes(i)) {
-      tag = `<div class="inform-tag soon">📋 Check-in: end of this round</div>`;
-    } else if (informNext.includes(i)) {
-      tag = `<div class="inform-tag">Check-in: end of next round</div>`;
-    }
-    return `
-      <div class="player-list-item">
-        <div>
-          <div class="name">${esc(p.name)}</div>
-          ${tag}
-        </div>
+    if (informList.includes(i)) tag = `<div class="inform-tag soon">📋 Check-in: end of this round</div>`;
+    else if (informNext.includes(i)) tag = `<div class="inform-tag">Check-in: end of next round</div>`;
+
+    let chips = '';
+    if (p.beyondSuspicion) chips += ' <span class="chip chip-beyond">Beyond Suspicion</span>';
+    if (p.hasWeapon) chips += ' <span class="chip chip-weapon">Weapon</span>';
+
+    const encDone = p.inEncounterThisRound ? ' <span style="font-size:0.7rem;color:var(--text-dim);">(in room)</span>' : '';
+
+    return `<div class="player-list-item">
+      <div>
+        <div class="name">${esc(p.name)}${chips}${encDone}</div>
+        ${tag}
+      </div>
+      <div class="player-action-btns">
+        ${!p.beyondSuspicion && p.status!=='revealed' ? `<button class="btn btn-small" style="color:var(--blue-glow);border-color:var(--blue);" onclick="setBeyondSuspicion(${i})">BS</button>` : ''}
+        ${p.beyondSuspicion ? `<button class="btn btn-small" style="color:var(--text-dim);border-color:var(--border);" onclick="removeBeyondSuspicion(${i})">-BS</button>` : ''}
+        ${!p.hasWeapon ? `<button class="btn btn-small" style="color:var(--warn);border-color:rgba(249,168,37,0.4);" onclick="toggleWeapon(${i})">+W</button>` : `<button class="btn btn-small" style="color:var(--text-dim);border-color:var(--border);" onclick="toggleWeapon(${i})">-W</button>`}
         <button class="btn btn-danger btn-small" onclick="revealPlayer(${i})">Reveal</button>
-      </div>`;
+      </div>
+    </div>`;
   }).join('');
 
-  const revealed = state.players.filter(p => p.status === 'revealed');
+  // Revealed
+  const revealed = S.players.filter(p=>p.status==='revealed');
   let revealedHtml = '';
   if (revealed.length) {
-    revealedHtml = `
-      <div class="card">
-        <h2>Revealed Things</h2>
-        ${revealed.map(p => `
-          <div class="player-list-item" style="opacity:0.5;">
-            <div class="name">${esc(p.name)}</div>
-            <span class="status-badge status-revealed">Revealed</span>
-          </div>
-        `).join('')}
-      </div>`;
+    revealedHtml = `<div class="card"><h2>Revealed Things</h2>
+      ${revealed.map(p=>`<div class="player-list-item" style="opacity:0.5;"><div class="name">${esc(p.name)}</div><span class="status-badge status-revealed">Revealed</span></div>`).join('')}
+    </div>`;
   }
 
-  const roundEnc = state.encounters.filter(e => e.round === state.round);
+  // Encounter log this round
+  const roundEncs = S.encounters.filter(e=>e.round===S.round);
   let encHtml = '';
-  if (roundEnc.length) {
-    encHtml = `
-      <div class="card">
-        <h2>Round ${state.round} Encounters</h2>
-        ${roundEnc.map(e => `
-          <div class="encounter-log-item">
-            ${esc(state.players[e.p1].name)} ↔ ${esc(state.players[e.p2].name)} — Resolved
-            ${state.debug ? `<div class="encounter-result ${encounterResultClass(e)}">${encounterResultText(e)}</div>` : ''}
-          </div>
-        `).join('')}
-      </div>`;
+  if (roundEncs.length) {
+    encHtml = `<div class="card"><h2>Round ${S.round} Encounters</h2>
+      ${roundEncs.map(e=>`<div class="encounter-log-item">
+        <strong>Room:</strong> ${e.room.map(i=>esc(S.players[i].name)).join(', ')} — Resolved
+        ${S.debug ? e.results.map(r=>`<div class="encounter-result ${r.includes('☣')?'infected':'no-risk'}">${r}</div>`).join('') : ''}
+      </div>`).join('')}</div>`;
   }
 
-  // All encounters (debug)
-  let allEncHtml = '';
-  if (state.debug && state.encounters.length) {
-    const prevEnc = state.encounters.filter(e => e.round < state.round);
-    if (prevEnc.length) {
-      allEncHtml = `
-        <div class="debug-panel">
-          <h3>🔧 All Past Encounters</h3>
-          ${prevEnc.map(e => `
-            <div class="encounter-log-item">
-              R${e.round}: ${esc(state.players[e.p1].name)} ↔ ${esc(state.players[e.p2].name)}
-              <div class="encounter-result ${encounterResultClass(e)}">${encounterResultText(e)}</div>
-            </div>
-          `).join('')}
-        </div>`;
+  // Debug: past encounters
+  let pastEncHtml = '';
+  if (S.debug) {
+    const past = S.encounters.filter(e=>e.round<S.round);
+    if (past.length) {
+      pastEncHtml = `<div class="debug-panel"><h3>🔧 Past Encounters</h3>
+        ${past.map(e=>`<div class="encounter-log-item">
+          R${e.round}: ${e.room.map(i=>esc(S.players[i].name)).join(', ')}
+          ${e.results.map(r=>`<div class="encounter-result ${r.includes('☣')?'infected':'no-risk'}">${r}</div>`).join('')}
+        </div>`).join('')}</div>`;
     }
   }
 
-  return `
-    <div class="fade-in">
-      <div class="header-bar">
-        <h1 style="font-size:1.2rem;margin:0;">The Thing</h1>
-        <div class="round-badge">Round <span class="num">${state.round}</span></div>
-      </div>
-      ${debugHtml}
-      <div class="card">
-        <h2>Players</h2>
-        ${playerRows}
-      </div>
-      ${revealedHtml}
-      <div style="margin-bottom:12px;">
-        <button class="btn btn-secondary" onclick="goToEncounter()" ${getEligiblePlayers().length < 2 ? 'disabled' : ''}>⚔️ Encounter</button>
-      </div>
-      ${encHtml}
-      ${allEncHtml}
-      <button class="btn btn-primary" onclick="confirmEndRound()">End Round ${state.round}</button>
-      <div class="gap-md"></div>
-      <button class="btn btn-danger btn-small" style="width:100%;" onclick="confirmReset()">Reset Game</button>
-      <div class="gap-md"></div>
-    </div>`;
+  return `<div class="fade-in">
+    <div class="header-bar">
+      <h1 style="font-size:1.2rem;margin:0;">The Thing</h1>
+      <div class="round-badge">Round <span class="num">${S.round}</span></div>
+    </div>
+    ${debugHtml}
+    <div class="card"><h2>Players</h2>${playerRows}</div>
+    ${revealedHtml}
+    <div style="margin-bottom:12px;">
+      <button class="btn btn-secondary" onclick="startRoomEncounter()" ${available.length<2?'disabled':''}>🚪 Room Encounter</button>
+    </div>
+    ${encHtml}
+    ${pastEncHtml}
+    <button class="btn btn-primary" onclick="confirmEndRound()">End Round ${S.round}</button>
+    <div class="gap-md"></div>
+    <button class="btn btn-danger btn-small" style="width:100%;" onclick="confirmReset()">Reset Game</button>
+    <div class="gap-md"></div>
+  </div>`;
 }
 
-function renderEncounter() {
-  const eligible = getEligiblePlayers();
-  const valid = isPairValid(state.encounterP1, state.encounterP2);
+function renderRoomSelect() {
+  const available = getAvailableForRoom();
+  const selected = S.room.playerIndices;
+  const canProceed = selected.length >= 2 && selected.length <= 3;
 
-  // Build warnings
-  let warning = '';
-  if (state.encounterP1 !== null && state.encounterP2 !== null) {
-    if (state.encounterP1 === state.encounterP2) {
-      warning = '⚠ Select two different players.';
-    } else if (pairAlreadyEncountered(state.encounterP1, state.encounterP2)) {
-      warning = '⚠ This pair has already had an encounter this round.';
-    }
-  }
+  return `<div class="fade-in">
+    <div class="header-bar">
+      <h1 style="font-size:1.2rem;margin:0;">Room Setup</h1>
+      <div class="round-badge">Round <span class="num">${S.round}</span></div>
+    </div>
+    <div class="card">
+      <h2>Select players in this room (2-3)</h2>
+      <p style="color:var(--text-dim);font-size:0.85rem;margin-bottom:12px;">Tap to toggle. ${selected.length}/3 selected.</p>
+      ${available.map(i => {
+        const p = S.players[i];
+        const isSel = selected.includes(i);
+        let chips = '';
+        if (p.beyondSuspicion) chips += ' <span class="chip chip-beyond">BS</span>';
+        if (p.hasWeapon) chips += ' <span class="chip chip-weapon">W</span>';
+        return `<div class="player-list-item" style="cursor:pointer;${isSel?'border-color:var(--accent-glow);background:rgba(198,40,40,0.08);':''}" onclick="toggleRoomPlayer(${i})">
+          <div class="name">${esc(p.name)}${chips}</div>
+          <span style="font-size:1.2rem;">${isSel?'✓':''}</span>
+        </div>`;
+      }).join('')}
+      <div class="gap-md"></div>
+      <button class="btn btn-primary" ${!canProceed?'disabled':''} onclick="goToRoomPicks()">Set Up Picks</button>
+      <div class="gap-sm"></div>
+      <button class="btn btn-secondary" onclick="cancelRoom()">Cancel</button>
+    </div>
+  </div>`;
+}
 
-  // For P2 dropdown, filter out: same as P1, already paired with P1, or at max encounters
-  const p2Eligible = eligible.filter(i => {
-    if (state.encounterP1 === null) return true;
-    if (i === state.encounterP1) return false;
-    if (pairAlreadyEncountered(state.encounterP1, i)) return false;
-    return true;
+function renderRoomPicks() {
+  const room = S.room.playerIndices;
+  const picks = S.room.picks;
+
+  // For each player in the room, they can pick from other players who are NOT beyond suspicion
+  // Players with a weapon OR who are beyond suspicion can choose "No pick"
+  // Players without a weapon who are NOT beyond suspicion MUST pick
+
+  const rows = room.map(i => {
+    const p = S.players[i];
+    const canSkip = p.beyondSuspicion || p.hasWeapon;
+    // Targets: other players in room who are NOT beyond suspicion (they have no tokens)
+    const targets = room.filter(j => j !== i && !S.players[j].beyondSuspicion);
+    const currentPick = picks[i] !== undefined ? picks[i] : (canSkip ? 'none' : '');
+
+    let chips = '';
+    if (p.beyondSuspicion) chips += ' <span class="chip chip-beyond">BS</span>';
+    if (p.hasWeapon) chips += ' <span class="chip chip-weapon">W</span>';
+
+    return `<div class="room-player-row">
+      <div class="room-player-name">${esc(p.name)}${chips}</div>
+      <div class="room-pick-row">
+        <label>Picks from:</label>
+        <select onchange="setRoomPick(${i},this.value)">
+          ${canSkip ? `<option value="none" ${currentPick==='none'?'selected':''}>No pick</option>` : `<option value="" ${currentPick===''?'selected':''}>Select...</option>`}
+          ${targets.map(j => `<option value="${j}" ${currentPick===j?'selected':''}>${esc(S.players[j].name)}</option>`).join('')}
+        </select>
+      </div>
+      ${p.beyondSuspicion && currentPick !== 'none' && currentPick !== '' ? '<div style="font-size:0.75rem;color:var(--warn);margin-top:4px;">⚠ Will lose Beyond Suspicion</div>' : ''}
+    </div>`;
+  }).join('');
+
+  // Validate: all non-skippable players must have a pick
+  const allValid = room.every(i => {
+    const canSkip = S.players[i].beyondSuspicion || S.players[i].hasWeapon;
+    const pick = picks[i];
+    if (canSkip) return pick !== undefined; // 'none' is valid
+    return pick !== undefined && pick !== '' && pick !== 'none';
   });
 
-  return `
-    <div class="fade-in">
-      <div class="header-bar">
-        <h1 style="font-size:1.2rem;margin:0;">Encounter</h1>
-        <div class="round-badge">Round <span class="num">${state.round}</span></div>
-      </div>
-      <div class="card">
-        <div class="encounter-select">
-          <label>Player 1</label>
-          <select onchange="state.encounterP1=this.value?parseInt(this.value):null;state.encounterP2=null;render()">
-            <option value="">Select player...</option>
-            ${eligible.map(i => `<option value="${i}" ${state.encounterP1===i?'selected':''}>${esc(state.players[i].name)}</option>`).join('')}
-          </select>
-        </div>
-        <div class="encounter-select">
-          <label>Player 2</label>
-          <select onchange="state.encounterP2=this.value?parseInt(this.value):null;render()">
-            <option value="">Select player...</option>
-            ${p2Eligible.map(i => `<option value="${i}" ${state.encounterP2===i?'selected':''}>${esc(state.players[i].name)}</option>`).join('')}
-          </select>
-        </div>
-        ${warning ? `<p style="color:var(--accent-glow);font-size:0.85rem;">${warning}</p>` : ''}
-        <div class="gap-md"></div>
-        <button class="btn btn-primary" ${!valid?'disabled':''} onclick="resolveEncounter()">Resolve Encounter</button>
-        <div class="gap-sm"></div>
-        <button class="btn btn-secondary" onclick="state.screen='main';render()">Cancel</button>
-      </div>
-    </div>`;
+  return `<div class="fade-in">
+    <div class="header-bar">
+      <h1 style="font-size:1.2rem;margin:0;">Token Picks</h1>
+      <div class="round-badge">Round <span class="num">${S.round}</span></div>
+    </div>
+    <div class="card">
+      <h2>Who picks from whom?</h2>
+      <p style="color:var(--text-dim);font-size:0.85rem;margin-bottom:12px;">
+        Each player picks one token from another player in the room. Beyond Suspicion players have no tokens to pick from.
+      </p>
+      ${rows}
+      <div class="gap-md"></div>
+      <button class="btn btn-primary" ${!allValid?'disabled':''} onclick="resolveRoom()">Resolve Encounter</button>
+      <div class="gap-sm"></div>
+      <button class="btn btn-secondary" onclick="S.screen='room-select';render()">Back</button>
+    </div>
+  </div>`;
 }
 
 function renderEndRoundSelect() {
-  const remaining = state.informQueue.filter(i => !state.informDone.has(i));
-
+  const remaining = S.informQueue.filter(i => !S.informDone.has(i));
   if (!remaining.length) {
-    return `
-      <div class="fade-in screen-overlay">
-        <div class="reveal-icon">✅</div>
-        <div class="reveal-status human">Round ${state.round} Complete</div>
-        <div class="reveal-flavor">All players have been checked in.</div>
-        <button class="btn btn-primary" style="width:auto;min-width:200px;" onclick="advanceRound()">Begin Round ${state.round + 1}</button>
-      </div>`;
-  }
-
-  return `
-    <div class="fade-in">
-      <div class="header-bar">
-        <h1 style="font-size:1.2rem;margin:0;">End of Round ${state.round}</h1>
-      </div>
-      <div class="card">
-        <h2>Pass to each player</h2>
-        <p style="color:var(--text-dim);font-size:0.9rem;margin-bottom:16px;">
-          Hand the device to each player privately so they can check their status.
-        </p>
-        <div class="player-select-list">
-          ${remaining.map(i => `
-            <button onclick="showPlayerStatus(${i})">${esc(state.players[i].name)}</button>
-          `).join('')}
-        </div>
-      </div>
+    return `<div class="fade-in screen-overlay">
+      <div class="reveal-icon">✅</div>
+      <div class="reveal-status human">Round ${S.round} Complete</div>
+      <div class="reveal-flavor">All players have been checked in.</div>
+      <button class="btn btn-primary" style="width:auto;min-width:200px;" onclick="advanceRound()">Begin Round ${S.round+1}</button>
     </div>`;
+  }
+  return `<div class="fade-in">
+    <div class="header-bar"><h1 style="font-size:1.2rem;margin:0;">End of Round ${S.round}</h1></div>
+    <div class="card">
+      <h2>Pass to each player</h2>
+      <p style="color:var(--text-dim);font-size:0.9rem;margin-bottom:16px;">Hand the device to each player privately so they can check their status.</p>
+      <div class="player-select-list">
+        ${remaining.map(i=>`<button onclick="showPlayerStatus(${i})">${esc(S.players[i].name)}</button>`).join('')}
+      </div>
+    </div>
+  </div>`;
 }
 
 function renderRevealStatus() {
-  const p = state.players[state.revealPlayerIdx];
-  // Use override if set (round 1 shows starting status, not current)
-  const displayStatus = state._revealOverride || p.status;
+  const p = S.players[S.revealPlayerIdx];
+  const displayStatus = S._revealOverride || p.status;
   const isThing = displayStatus === 'thing';
   const flavors = isThing ? thingFlavors : humanFlavors;
-  const flavor = flavors[Math.floor(Math.random() * flavors.length)];
-
-  return `
-    <div class="screen-overlay fade-in">
-      <div style="font-size:0.9rem;color:var(--text-dim);margin-bottom:8px;letter-spacing:2px;text-transform:uppercase;">
-        ${esc(p.name)}
-      </div>
-      <div class="reveal-icon">${isThing ? '👾' : '🧑'}</div>
-      <div class="reveal-status ${isThing ? 'thing' : 'human'}">${isThing ? 'THE THING' : 'HUMAN'}</div>
-      <div class="reveal-flavor">${flavor}</div>
-      <button class="btn btn-primary" style="width:auto;min-width:200px;" onclick="dismissReveal()">OK</button>
-    </div>`;
+  const flavor = flavors[Math.floor(Math.random()*flavors.length)];
+  return `<div class="screen-overlay fade-in">
+    <div style="font-size:0.9rem;color:var(--text-dim);margin-bottom:8px;letter-spacing:2px;text-transform:uppercase;">${esc(p.name)}</div>
+    <div class="reveal-icon">${isThing?'👾':'🧑'}</div>
+    <div class="reveal-status ${isThing?'thing':'human'}">${isThing?'THE THING':'HUMAN'}</div>
+    <div class="reveal-flavor">${flavor}</div>
+    <button class="btn btn-primary" style="width:auto;min-width:200px;" onclick="dismissReveal()">OK</button>
+  </div>`;
 }
 
 function renderConfirmModal() {
-  return `
-    <div class="confirm-modal" onclick="cancelConfirm(event)">
-      <div class="modal-card">
-        <p>${state.confirmModal.message}</p>
-        <div class="modal-btns">
-          <button class="btn btn-secondary" onclick="cancelConfirm(event)" style="flex:1;">Cancel</button>
-          <button class="btn btn-primary" onclick="doConfirm()" style="flex:1;">Confirm</button>
-        </div>
+  return `<div class="confirm-modal" onclick="cancelConfirm(event)">
+    <div class="modal-card"><p>${S.confirmModal.message}</p>
+      <div class="modal-btns">
+        <button class="btn btn-secondary" onclick="cancelConfirm(event)" style="flex:1;">Cancel</button>
+        <button class="btn btn-primary" onclick="doConfirm()" style="flex:1;">Confirm</button>
       </div>
-    </div>`;
+    </div></div>`;
 }
 
 // ─── Actions ───
 
 function selectCount(n) {
-  state.playerCount = n;
-  while (state.players.length < n) {
-    state.players.push({ name:'', status:'human', statusAtStartOfRound:null, infectedOnRound:null, informed:false, informedOnRound:null, lastCheckedInRound:null });
-  }
-  state.players = state.players.slice(0, n);
+  S.playerCount = n;
+  while (S.players.length < n) S.players.push(makePlayer(''));
+  S.players = S.players.slice(0, n);
   render();
 }
 
-function goToNames() { if (state.playerCount) { state.screen = 'setup-names'; render(); } }
+function makePlayer(name) {
+  return { name, status:'human', statusAtStartOfRound:null, infectedOnRound:null, informed:false, informedOnRound:null, lastCheckedInRound:null, beyondSuspicion:false, hasWeapon:false, inEncounterThisRound:false };
+}
 
 function updateName(i, val) {
-  state.players[i].name = val;
+  S.players[i].name = val;
   const btn = document.querySelector('.btn-primary');
-  if (btn) btn.disabled = !state.players.every(p => p.name.trim());
+  if (btn) btn.disabled = !S.players.every(p=>p.name.trim());
 }
 
 function startGame() {
-  const idx = Math.floor(Math.random() * state.playerCount);
-  state.players[idx].status = 'thing';
-  state.players[idx].infectedOnRound = 0;
-  state.round = 1;
-  state.encounters = [];
-  state._rollsThisRound = {};
+  const idx = Math.floor(Math.random()*S.playerCount);
+  S.players[idx].status = 'thing';
+  S.players[idx].infectedOnRound = 0;
+  S.round = 1;
+  S.encounters = [];
   snapshotStartOfRound();
-  state.screen = 'main';
+  S.screen = 'main';
   render();
 }
 
-// Snapshot each player's status at the start of the round.
-// Check-ins at end of round N reveal the status as it was at the START of round N.
-function snapshotStartOfRound() {
-  for (const p of state.players) {
-    p.statusAtStartOfRound = p.status;
-  }
-}
+function setBeyondSuspicion(i) { S.players[i].beyondSuspicion = true; render(); }
+function removeBeyondSuspicion(i) { S.players[i].beyondSuspicion = false; render(); }
+function toggleWeapon(i) { S.players[i].hasWeapon = !S.players[i].hasWeapon; render(); }
 
-// ─── Encounter constraint helpers ───
-
-// Get encounters this round
-function getRoundEncounters() {
-  return state.encounters.filter(e => e.round === state.round);
-}
-
-// How many encounters has this player had this round?
-function playerEncounterCount(playerIdx) {
-  return getRoundEncounters().filter(e => e.p1 === playerIdx || e.p2 === playerIdx).length;
-}
-
-// Has this specific pair already had an encounter this round?
-function pairAlreadyEncountered(a, b) {
-  return getRoundEncounters().some(e =>
-    (e.p1 === a && e.p2 === b) || (e.p1 === b && e.p2 === a)
-  );
-}
-
-// Get list of players eligible for encounter selection.
-// A player is eligible if: active, and has fewer than 2 encounters this round.
-function getEligiblePlayers() {
-  return getActivePlayerIndices().filter(i => playerEncounterCount(i) < 2);
-}
-
-// Check if a specific pair is valid (eligible + not already paired this round)
-function isPairValid(a, b) {
-  if (a === null || b === null || a === b) return false;
-  if (playerEncounterCount(a) >= 2 || playerEncounterCount(b) >= 2) return false;
-  if (pairAlreadyEncountered(a, b)) return false;
-  return true;
-}
-
-function goToEncounter() {
-  state.encounterP1 = null;
-  state.encounterP2 = null;
-  state.screen = 'encounter';
+function revealPlayer(idx) {
+  S.confirmModal = {
+    message: `Reveal ${esc(S.players[idx].name)} as a Thing? They will be removed from the game.`,
+    onConfirm: () => { S.players[idx].status='revealed'; S.players[idx].beyondSuspicion=false; render(); }
+  };
   render();
 }
 
-function resolveEncounter() {
-  const p1 = state.players[state.encounterP1];
-  const p2 = state.players[state.encounterP2];
-
-  if (p1.status === 'human' && p2.status === 'human') {
-    state.encounters.push({ round: state.round, p1: state.encounterP1, p2: state.encounterP2, result: 'both_human' });
-    state.screen = 'main';
-    render();
-    return;
-  }
-
-  // At least one player is a Thing. Determine infection roll for each Thing involved.
-  // For each Thing: check their charge state from prior encounters THIS round.
-  //   'available' = no prior encounter → 50/50 roll
-  //   'will_infect' = prior encounter didn't infect → this one definitely does
-  //   'spent' = prior encounter infected → this one definitely doesn't
-  // The roll/charge is consumed regardless of the target's status.
-
-  let result = 'no_change';
-
-  // Handle each possible Thing in the encounter
-  if (p1.status === 'thing') {
-    const charge = getThingChargeState(state.encounterP1);
-    let rollInfects;
-    if (charge === 'spent') {
-      rollInfects = false;
-    } else if (charge === 'will_infect') {
-      rollInfects = true;
-    } else {
-      rollInfects = Math.random() < 0.5;
-    }
-
-    if (rollInfects && p2.status === 'human') {
-      p2.status = 'thing';
-      p2.infectedOnRound = state.round;
-      result = 'p2_infected';
-    } else if (rollInfects && p2.status === 'thing') {
-      result = 'both_thing'; // "infected" another Thing — no status change
-    }
-
-    // Record the roll for this Thing (used by getThingChargeState)
-    // We store it as a tag on the encounter so charge state can be derived
-    // We'll use a _rolls map for this
-    if (!state._rollsThisRound) state._rollsThisRound = {};
-    if (!state._rollsThisRound[state.encounterP1]) state._rollsThisRound[state.encounterP1] = [];
-    state._rollsThisRound[state.encounterP1].push(rollInfects);
-  }
-
-  if (p2.status === 'thing') {
-    const charge = getThingChargeState(state.encounterP2);
-    let rollInfects;
-    if (charge === 'spent') {
-      rollInfects = false;
-    } else if (charge === 'will_infect') {
-      rollInfects = true;
-    } else {
-      rollInfects = Math.random() < 0.5;
-    }
-
-    if (rollInfects && p1.status === 'human') {
-      p1.status = 'thing';
-      p1.infectedOnRound = state.round;
-      result = 'p1_infected';
-    } else if (rollInfects && p1.status === 'thing' && result !== 'p2_infected') {
-      result = 'both_thing';
-    }
-
-    if (!state._rollsThisRound) state._rollsThisRound = {};
-    if (!state._rollsThisRound[state.encounterP2]) state._rollsThisRound[state.encounterP2] = [];
-    state._rollsThisRound[state.encounterP2].push(rollInfects);
-  }
-
-  state.encounters.push({ round: state.round, p1: state.encounterP1, p2: state.encounterP2, result });
-  state.screen = 'main';
+// Room encounter
+function startRoomEncounter() {
+  S.room = { playerIndices:[], picks:{} };
+  S.screen = 'room-select';
   render();
 }
 
-// Determine the infection charge state for a Thing player this round.
-// Based on their rolls stored in _rollsThisRound.
-// 'available' — no encounters yet this round
-// 'will_infect' — first encounter rolled false (didn't infect), so second is guaranteed
-// 'spent' — first encounter rolled true (infected), so second cannot infect
-function getThingChargeState(playerIdx) {
-  if (!state._rollsThisRound || !state._rollsThisRound[playerIdx]) return 'available';
-  const rolls = state._rollsThisRound[playerIdx];
-  if (rolls.length === 0) return 'available';
-  // First roll determines second encounter
-  return rolls[0] ? 'spent' : 'will_infect';
+function toggleRoomPlayer(i) {
+  const idx = S.room.playerIndices.indexOf(i);
+  if (idx >= 0) {
+    S.room.playerIndices.splice(idx, 1);
+  } else if (S.room.playerIndices.length < 3) {
+    S.room.playerIndices.push(i);
+  }
+  // Reset picks when room changes
+  S.room.picks = {};
+  render();
 }
 
+function goToRoomPicks() {
+  // Initialize picks
+  S.room.picks = {};
+  for (const i of S.room.playerIndices) {
+    const p = S.players[i];
+    const canSkip = p.beyondSuspicion || p.hasWeapon;
+    S.room.picks[i] = canSkip ? 'none' : '';
+  }
+  S.screen = 'room-picks';
+  render();
+}
+
+function setRoomPick(picker, val) {
+  S.room.picks[picker] = val === 'none' ? 'none' : (val === '' ? '' : parseInt(val));
+  render();
+}
+
+function cancelRoom() {
+  S.room = { playerIndices:[], picks:{} };
+  S.screen = 'main';
+  render();
+}
+
+// End of round
 function confirmEndRound() {
-  state.confirmModal = {
-    message: `End Round ${state.round}? This will begin the player check-in process.`,
+  S.confirmModal = {
+    message: `End Round ${S.round}? This will begin the player check-in process.`,
     onConfirm: () => {
-      state.informQueue = buildInformList();
-      state.informDone = new Set();
-      state.screen = 'end-round-select';
+      S.informQueue = buildInformList();
+      S.informDone = new Set();
+      S.screen = 'end-round-select';
       render();
     }
   };
@@ -1079,110 +720,70 @@ function confirmEndRound() {
 }
 
 function showPlayerStatus(idx) {
-  const p = state.players[idx];
-  const isRound1Special = (state.round === 1);
+  const p = S.players[idx];
+  const isRound1Special = (S.round === 1);
 
   if (isRound1Special) {
-    // Round 1 check-in reveals starting status only.
-    // A player infected during round 1 encounters still shows HUMAN here
-    // because their starting status was Human.
-    // Only the original Thing (infectedOnRound 0) is shown as Thing and marked informed.
     const startingIsThing = (p.infectedOnRound === 0);
-    state._revealOverride = startingIsThing ? 'thing' : 'human';
-
+    S._revealOverride = startingIsThing ? 'thing' : 'human';
     if (startingIsThing && !p.informed) {
       p.informed = true;
-      p.informedOnRound = state.round;
+      p.informedOnRound = S.round;
     }
-
-    // Do NOT set lastCheckedInRound — the round 1 special check-in
-    // does not clear encounter obligations from round 1.
+    // Don't set lastCheckedInRound — round 1 special doesn't clear encounter obligations
   } else {
-    // Normal round: show status as it was at the START of this round.
-    // If a player was Human at start of round but got infected during this round,
-    // they still see Human now. They'll learn they're a Thing next round.
     const displayStatus = p.statusAtStartOfRound || p.status;
-    state._revealOverride = displayStatus;
-
-    // Only mark as informed if they were a Thing at the start of this round
-    // (not if they were infected during this round's encounters)
+    S._revealOverride = displayStatus;
     if (displayStatus === 'thing' && !p.informed) {
       const dueRound = (p.infectedOnRound === 0) ? 1 : p.infectedOnRound + 1;
-      if (state.round >= dueRound) {
+      if (S.round >= dueRound) {
         p.informed = true;
-        p.informedOnRound = state.round;
+        p.informedOnRound = S.round;
       }
     }
-
-    // Record check-in: this clears encounter obligations from PREVIOUS rounds only.
-    // End-of-round N check-in is triggered by encounters in round N-1 (or earlier).
-    // If this player also had an encounter THIS round (round N), that encounter
-    // should still trigger a check-in at end of round N+1.
-    // So we set lastCheckedInRound to round-1, not round.
-    p.lastCheckedInRound = state.round - 1;
+    p.lastCheckedInRound = S.round - 1;
   }
 
-  state.informDone.add(idx);
-  state.revealPlayerIdx = idx;
-  state.screen = 'reveal-status';
+  S.informDone.add(idx);
+  S.revealPlayerIdx = idx;
+  S.screen = 'reveal-status';
   render();
 }
 
 function dismissReveal() {
-  state.revealPlayerIdx = null;
-  state._revealOverride = null;
-  state.screen = 'end-round-select';
+  S.revealPlayerIdx = null;
+  S._revealOverride = null;
+  S.screen = 'end-round-select';
   render();
 }
 
 function advanceRound() {
-  state.round++;
-  state._rollsThisRound = {};
+  S.round++;
+  // Reset per-round flags
+  for (const p of S.players) p.inEncounterThisRound = false;
   snapshotStartOfRound();
-  state.screen = 'main';
-  render();
-}
-
-function revealPlayer(idx) {
-  state.confirmModal = {
-    message: `Reveal ${esc(state.players[idx].name)} as a Thing? They will be removed from the game.`,
-    onConfirm: () => { state.players[idx].status = 'revealed'; render(); }
-  };
+  S.screen = 'main';
   render();
 }
 
 function confirmReset() {
-  state.confirmModal = {
+  S.confirmModal = {
     message: 'Reset the entire game? All progress will be lost.',
     onConfirm: () => {
-      const dbg = state.debug;
-      state = { screen:'setup-count', playerCount:0, players:[], round:1, encounters:[],
-                encounterP1:null, encounterP2:null, informQueue:[], informDone:null,
-                revealPlayerIdx:null, _revealOverride:null, _rollsThisRound:{}, debug:dbg, confirmModal:null };
+      const dbg = S.debug;
+      S = { screen:'setup-count', playerCount:0, players:[], round:1, encounters:[],
+            debug:dbg, confirmModal:null,
+            room:{ playerIndices:[], picks:{} },
+            informQueue:[], informDone:null,
+            revealPlayerIdx:null, _revealOverride:null };
       render();
     }
   };
   render();
 }
 
-function doConfirm() {
-  if (state.confirmModal?.onConfirm) state.confirmModal.onConfirm();
-  state.confirmModal = null;
-  render();
-}
-
-function cancelConfirm(e) {
-  if (e.target.classList.contains('confirm-modal') || e.target.closest('.btn-secondary')) {
-    state.confirmModal = null;
-    render();
-  }
-}
-
-function esc(str) {
-  const d = document.createElement('div');
-  d.textContent = str || '';
-  return d.innerHTML;
-}
+function doConfirm() { if (S.confirmModal?.onConfirm) S.confirmModal.onConfirm(); S.confirmModal=null; render(); }
+function cancelConfirm(e) { if (e.target.classList.contains('confirm-modal')||e.target.closest('.btn-secondary')) { S.confirmModal=null; render(); } }
 
 render();
 </script>
