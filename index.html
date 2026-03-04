@@ -139,7 +139,7 @@ let S = {
   debug: false,
   confirmModal: null,
   // Room encounter building state
-  room: { playerIndices:[], picks:{}, weaponUsed:{} },
+  room: { playerIndices:[], picks:{}, weaponUsed:{}, hasDog:false },
   // End-of-round inform
   informQueue: [],
   informDone: null,
@@ -228,6 +228,11 @@ function resolveRoom() {
   const picks = S.room.picks;
   const weaponUsed = S.room.weaponUsed || {};
   const results = [];
+
+  // If Dog was present and kenneled, note it
+  if (S.room.dogResult === 'kenneled') {
+    results.push('🐕 Dog was Kenneled — no infection from Dog');
+  }
 
   // Use start-of-round statuses for determining tokens
   // Each Thing (at start of round) presents 1 Thing token + 1 Human token
@@ -325,10 +330,11 @@ function resolveRoom() {
     weaponUsed: {...weaponUsed},
     activePickers: activePickers,
     results: results,
+    hasDog: !!S.room.hasDog,
   });
 
   // Reset room state
-  S.room = { playerIndices: [], picks: {}, weaponUsed: {} };
+  S.room = { playerIndices: [], picks: {}, weaponUsed: {}, hasDog: false };
   S.screen = 'main';
   render();
 }
@@ -448,7 +454,7 @@ function renderMain() {
   if (roundEncs.length) {
     encHtml = `<div class="card"><h2>Round ${S.round} Encounters</h2>
       ${roundEncs.map(e=>`<div class="encounter-log-item">
-        <strong>Room:</strong> ${e.room.map(i=>esc(S.players[i].name)).join(', ')} — Resolved
+        <strong>Room:</strong> ${e.room.map(i=>esc(S.players[i].name)).join(', ')}${e.hasDog?' 🐕':''} — Resolved
         ${S.debug ? e.results.map(r=>`<div class="encounter-result ${r.includes('☣')?'infected':'no-risk'}">${r}</div>`).join('') : ''}
       </div>`).join('')}</div>`;
   }
@@ -460,7 +466,7 @@ function renderMain() {
     if (past.length) {
       pastEncHtml = `<div class="debug-panel"><h3>🔧 Past Encounters</h3>
         ${past.map(e=>`<div class="encounter-log-item">
-          R${e.round}: ${e.room.map(i=>esc(S.players[i].name)).join(', ')}
+          R${e.round}: ${e.room.map(i=>esc(S.players[i].name)).join(', ')}${e.hasDog?' 🐕':''}
           ${e.results.map(r=>`<div class="encounter-result ${r.includes('☣')?'infected':'no-risk'}">${r}</div>`).join('')}
         </div>`).join('')}</div>`;
     }
@@ -475,7 +481,7 @@ function renderMain() {
     <div class="card"><h2>Players</h2>${playerRows}</div>
     ${revealedHtml}
     <div style="margin-bottom:12px;">
-      <button class="btn btn-secondary" onclick="startRoomEncounter()" ${available.length<2?'disabled':''}>🚪 Room Encounter</button>
+      <button class="btn btn-secondary" onclick="startRoomEncounter()" ${available.length<1?'disabled':''}>🚪 Room Encounter</button>
     </div>
     ${encHtml}
     ${pastEncHtml}
@@ -489,12 +495,29 @@ function renderMain() {
 function renderRoomSelect() {
   const available = getAvailableForRoom();
   const selected = S.room.playerIndices;
-  // Can proceed only if 2-3 players AND at least one non-BS player exists to present tokens
-  // AND at least one player would be able to pick from a non-BS player
-  const nonBSInRoom = selected.filter(i => !S.players[i].beyondSuspicion);
-  const canProceed = selected.length >= 2 && selected.length <= 3 && nonBSInRoom.length >= 1 &&
-    // At least one player can pick from a non-BS player (someone other than themselves is non-BS)
-    selected.some(i => selected.some(j => j !== i && !S.players[j].beyondSuspicion));
+  const hasDog = !!S.room.hasDog;
+
+  // Determine if we can proceed
+  let canProceed = false;
+  let warning = '';
+
+  if (selected.length === 1 && hasDog) {
+    // 1 player + Dog: always valid (Dog encounter)
+    canProceed = true;
+  } else if (selected.length >= 2 && selected.length <= 3) {
+    // 2-3 players: need at least one non-BS player presenting tokens
+    // AND at least one player able to pick from a non-BS player
+    const nonBSInRoom = selected.filter(i => !S.players[i].beyondSuspicion);
+    if (nonBSInRoom.length < 1) {
+      warning = '⚠ No tokens can be picked — all selected players are Beyond Suspicion.';
+    } else if (!selected.some(i => selected.some(j => j !== i && !S.players[j].beyondSuspicion))) {
+      warning = '⚠ No valid token picks possible with this combination.';
+    } else {
+      canProceed = true;
+    }
+  } else if (selected.length === 1 && !hasDog) {
+    warning = '⚠ A single player needs a Dog in the room for an encounter.';
+  }
 
   return `<div class="fade-in">
     <div class="header-bar">
@@ -502,7 +525,7 @@ function renderRoomSelect() {
       <div class="round-badge">Round <span class="num">${S.round}</span></div>
     </div>
     <div class="card">
-      <h2>Select players in this room (2-3)</h2>
+      <h2>Select players in this room (1-3)</h2>
       <p style="color:var(--text-dim);font-size:0.85rem;margin-bottom:12px;">Tap to toggle. ${selected.length}/3 selected.</p>
       ${available.map(i => {
         const p = S.players[i];
@@ -515,9 +538,18 @@ function renderRoomSelect() {
           <span style="font-size:1.2rem;">${isSel?'✓':''}</span>
         </div>`;
       }).join('')}
+
+      <div class="gap-sm"></div>
+      <div class="player-list-item" style="cursor:pointer;${hasDog?'border-color:var(--warn);background:rgba(249,168,37,0.08);':''}" onclick="S.room.hasDog=!S.room.hasDog;render()">
+        <div class="name">🐕 Dog in room</div>
+        <span style="font-size:1.2rem;">${hasDog?'✓':''}</span>
+      </div>
+
       <div class="gap-md"></div>
-      ${selected.length >= 2 && nonBSInRoom.length < 1 ? '<p style="color:var(--warn);font-size:0.85rem;margin-bottom:8px;">⚠ No tokens can be picked — all selected players are Beyond Suspicion.</p>' : ''}
-      <button class="btn btn-primary" ${!canProceed?'disabled':''} onclick="goToRoomPicks()">Set Up Picks</button>
+      ${warning ? `<p style="color:var(--warn);font-size:0.85rem;margin-bottom:8px;">${warning}</p>` : ''}
+      <button class="btn btn-primary" ${!canProceed?'disabled':''} onclick="proceedFromRoomSelect()">
+        ${selected.length === 1 && hasDog ? 'Resolve Dog Encounter' : 'Set Up Picks'}
+      </button>
       <div class="gap-sm"></div>
       <button class="btn btn-secondary" onclick="cancelRoom()">Cancel</button>
     </div>
@@ -607,6 +639,7 @@ function renderRoomPicks() {
     </div>
     <div class="card">
       <h2>Who picks from whom?</h2>
+      ${S.room.dogResult === 'kenneled' ? '<div style="background:rgba(249,168,37,0.1);border:1px solid rgba(249,168,37,0.3);border-radius:8px;padding:8px 12px;margin-bottom:12px;font-size:0.85rem;color:var(--warn);">🐕 Dog was Kenneled — no infection from Dog</div>' : ''}
       <p style="color:var(--text-dim);font-size:0.85rem;margin-bottom:12px;">
         Each player picks one token from another player. Beyond Suspicion players have no tokens. Weapon holders can opt out entirely.
       </p>
@@ -711,7 +744,7 @@ function revealPlayer(idx) {
 
 // Room encounter
 function startRoomEncounter() {
-  S.room = { playerIndices:[], picks:{}, weaponUsed:{} };
+  S.room = { playerIndices:[], picks:{}, weaponUsed:{}, hasDog:false };
   S.screen = 'room-select';
   render();
 }
@@ -728,10 +761,70 @@ function toggleRoomPlayer(i) {
   render();
 }
 
+// Route from room select: Dog-only encounter or normal picks
+function proceedFromRoomSelect() {
+  const selected = S.room.playerIndices;
+  const hasDog = !!S.room.hasDog;
+
+  if (selected.length === 1 && hasDog) {
+    // 1 player + Dog: resolve Dog encounter directly
+    resolveDogEncounter();
+  } else {
+    // 2-3 players (with or without Dog): go to picks
+    // If Dog present, it's Kenneled (noted in results)
+    goToRoomPicks();
+  }
+}
+
+function resolveDogEncounter() {
+  const playerIdx = S.room.playerIndices[0];
+  const p = S.players[playerIdx];
+  const results = [];
+
+  // 2/9 chance of infection
+  const infected = Math.random() < (2/9);
+
+  if (infected) {
+    if (p.status === 'human') {
+      p.status = 'thing';
+      p.infectedOnRound = S.round;
+    }
+    results.push(`🐕 ${esc(p.name)} picked an infected token from the Dog — ☣ INFECTED`);
+  } else {
+    results.push(`🐕 ${esc(p.name)} picked a safe token from the Dog`);
+  }
+
+  // Mark player as having been in a room this round
+  p.inEncounterThisRound = true;
+
+  // Save encounter record — player counts as active picker for inform purposes
+  S.encounters.push({
+    round: S.round,
+    room: [playerIdx],
+    picks: {},
+    weaponUsed: {},
+    activePickers: [playerIdx],
+    results: results,
+    hasDog: true,
+  });
+
+  // Reset room state
+  S.room = { playerIndices:[], picks:{}, weaponUsed:{}, hasDog:false };
+  S.screen = 'main';
+  render();
+}
+
 function goToRoomPicks() {
   // Initialize weapon usage and picks
-  S.room.weaponUsed = {}; // { playerIdx: true/false } — only for weapon holders
+  S.room.weaponUsed = {};
   S.room.picks = {};
+  S.room.dogResult = null; // Store Dog kenneling note if applicable
+
+  // If Dog is present with 2-3 players, it's Kenneled
+  if (S.room.hasDog && S.room.playerIndices.length >= 2) {
+    S.room.dogResult = 'kenneled';
+  }
+
   for (const i of S.room.playerIndices) {
     const p = S.players[i];
     if (p.hasWeapon) {
@@ -782,7 +875,7 @@ function setRoomPick(picker, val) {
 }
 
 function cancelRoom() {
-  S.room = { playerIndices:[], picks:{}, weaponUsed:{} };
+  S.room = { playerIndices:[], picks:{}, weaponUsed:{}, hasDog:false };
   S.screen = 'main';
   render();
 }
@@ -855,7 +948,7 @@ function confirmReset() {
       const dbg = S.debug;
       S = { screen:'setup-count', playerCount:0, players:[], round:1, encounters:[],
             debug:dbg, confirmModal:null,
-            room:{ playerIndices:[], picks:{}, weaponUsed:{} },
+            room:{ playerIndices:[], picks:{}, weaponUsed:{}, hasDog:false },
             informQueue:[], informDone:null,
             revealPlayerIdx:null, _revealOverride:null };
       render();
