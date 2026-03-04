@@ -536,7 +536,7 @@ function renderRoomPicks() {
 
   const rows = room.map(i => {
     const p = S.players[i];
-    const canSkip = p.beyondSuspicion || p.hasWeapon;
+    const canSkip = p.hasWeapon; // Only weapon holders can opt out of picking
     // Targets: other players in room who are NOT beyond suspicion (they have no tokens)
     const targets = room.filter(j => j !== i && !S.players[j].beyondSuspicion);
     const forcedNoPick = targets.length === 0;
@@ -568,7 +568,7 @@ function renderRoomPicks() {
 
   // Validate: all players must have a valid pick assignment
   const allValid = room.every(i => {
-    const canSkip = S.players[i].beyondSuspicion || S.players[i].hasWeapon;
+    const canSkip = S.players[i].hasWeapon; // Only weapon holders can opt out
     const targets = room.filter(j => j !== i && !S.players[j].beyondSuspicion);
     const pick = picks[i];
     // If no valid targets, forced no-pick is always valid
@@ -709,7 +709,7 @@ function goToRoomPicks() {
   S.room.picks = {};
   for (const i of S.room.playerIndices) {
     const p = S.players[i];
-    const canSkip = p.beyondSuspicion || p.hasWeapon;
+    const canSkip = p.hasWeapon; // Only weapon holders can opt out
     // Check if this player has any valid targets (non-BS players in room besides themselves)
     const targets = S.room.playerIndices.filter(j => j !== i && !S.players[j].beyondSuspicion);
     if (targets.length === 0) {
