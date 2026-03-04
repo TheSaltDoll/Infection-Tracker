@@ -139,7 +139,7 @@ let S = {
   debug: false,
   confirmModal: null,
   // Room encounter building state
-  room: { playerIndices:[], picks:{} }, // picks: { pickerIdx: targetIdx | 'none' }
+  room: { playerIndices:[], picks:{}, weaponUsed:{} },
   // End-of-round inform
   informQueue: [],
   informDone: null,
@@ -225,29 +225,28 @@ function getPlayersToInformNextRound() {
 // ─── Room encounter resolution ───
 function resolveRoom() {
   const room = S.room.playerIndices;
-  const picks = S.room.picks; // { pickerIdx: targetIdx | 'none' }
+  const picks = S.room.picks;
+  const weaponUsed = S.room.weaponUsed || {};
   const results = [];
 
   // Use start-of-round statuses for determining tokens
   // Each Thing (at start of round) presents 1 Thing token + 1 Human token
   // Each Human presents 2 Human tokens
   // Beyond Suspicion players present no tokens
+  // Weapon users who opted out present no tokens and don't pick
 
   // Track how many people pick from each target
-  const picksFromTarget = {}; // targetIdx -> [pickerIdx, ...]
+  const picksFromTarget = {};
   for (const pickerStr of Object.keys(picks)) {
     const picker = parseInt(pickerStr);
     const target = picks[pickerStr];
     if (target === 'none') continue;
+    if (weaponUsed[picker]) continue; // Weapon user opted out
     if (!picksFromTarget[target]) picksFromTarget[target] = [];
     picksFromTarget[target].push(picker);
   }
 
-  // For each target that is a Thing (at start of round), determine infection
-  // They have 1 Thing token among 2 total. If N players pick from them:
-  //   N=1: 50% chance that player gets the Thing token
-  //   N=2: exactly 1 gets the Thing token (random which one)
-  const infections = []; // [{ infected: pickerIdx, by: targetIdx }]
+  const infections = [];
 
   for (const targetStr of Object.keys(picksFromTarget)) {
     const target = parseInt(targetStr);
@@ -255,7 +254,6 @@ function resolveRoom() {
     const targetStartStatus = S.players[target].statusAtStartOfRound;
 
     if (targetStartStatus !== 'thing') {
-      // Target is Human at start of round — all tokens are Human, no infections
       for (const p of pickers) {
         results.push(`${esc(S.players[p].name)} picked from ${esc(S.players[target].name)} — Human token`);
       }
@@ -264,7 +262,6 @@ function resolveRoom() {
 
     // Target is a Thing — 1 Thing token, 1 Human token
     if (pickers.length === 1) {
-      // 50/50
       if (Math.random() < 0.5) {
         infections.push({ infected: pickers[0], by: target });
         results.push(`${esc(S.players[pickers[0]].name)} picked from ${esc(S.players[target].name)} — ☣ THING token`);
@@ -272,7 +269,6 @@ function resolveRoom() {
         results.push(`${esc(S.players[pickers[0]].name)} picked from ${esc(S.players[target].name)} — Human token`);
       }
     } else if (pickers.length === 2) {
-      // Exactly one gets the Thing token
       const luckyIndex = Math.random() < 0.5 ? 0 : 1;
       for (let k = 0; k < 2; k++) {
         if (k === luckyIndex) {
@@ -285,30 +281,30 @@ function resolveRoom() {
     }
   }
 
-  // Also log players who didn't pick
+  // Log weapon users and non-pickers
   for (const i of room) {
-    if (picks[i] === 'none' || picks[i] === undefined) {
+    if (weaponUsed[i]) {
+      results.push(`${esc(S.players[i].name)} used weapon — did not participate`);
+    } else if (picks[i] === 'none' || picks[i] === undefined) {
       results.push(`${esc(S.players[i].name)} did not pick a token`);
     }
   }
 
-  // Apply infections — only changes status if the picker is currently Human
+  // Apply infections
   for (const inf of infections) {
     const p = S.players[inf.infected];
-    if (p.status === 'human' || p.status === 'human') { // actual current status
-      if (p.statusAtStartOfRound === 'human' && p.status === 'human') {
-        p.status = 'thing';
-        p.infectedOnRound = S.round;
-      }
-      // If they were already a Thing (became one this round from another room), no change
+    if (p.statusAtStartOfRound === 'human' && p.status === 'human') {
+      p.status = 'thing';
+      p.infectedOnRound = S.round;
     }
   }
 
   // Remove Beyond Suspicion from anyone who picked a token
-  // Track who actually picked a token (for inform list purposes)
+  // Track who actually picked (for inform list purposes)
   const activePickers = [];
   for (const pickerStr of Object.keys(picks)) {
     const picker = parseInt(pickerStr);
+    if (weaponUsed[picker]) continue; // Weapon users don't count
     if (picks[pickerStr] !== 'none') {
       S.players[picker].beyondSuspicion = false;
       activePickers.push(picker);
@@ -316,21 +312,23 @@ function resolveRoom() {
   }
 
   // Mark all room participants as having been in a room this round (for room-per-round limit)
+  // Even weapon users — they were physically in the room and can't go to another
   for (const i of room) {
     S.players[i].inEncounterThisRound = true;
   }
 
-  // Save encounter record — include activePickers so inform logic knows who participated
+  // Save encounter record
   S.encounters.push({
     round: S.round,
     room: [...room],
     picks: {...picks},
+    weaponUsed: {...weaponUsed},
     activePickers: activePickers,
     results: results,
   });
 
   // Reset room state
-  S.room = { playerIndices: [], picks: {} };
+  S.room = { playerIndices: [], picks: {}, weaponUsed: {} };
   S.screen = 'main';
   render();
 }
@@ -529,22 +527,43 @@ function renderRoomSelect() {
 function renderRoomPicks() {
   const room = S.room.playerIndices;
   const picks = S.room.picks;
+  const weaponUsed = S.room.weaponUsed || {};
 
-  // For each player in the room, they can pick from other players who are NOT beyond suspicion
-  // Players with a weapon OR who are beyond suspicion can choose "No pick"
-  // Players without a weapon who are NOT beyond suspicion MUST pick
+  // Active participants: not using weapon
+  const activeInRoom = room.filter(i => !weaponUsed[i]);
 
   const rows = room.map(i => {
     const p = S.players[i];
-    const canSkip = p.hasWeapon; // Only weapon holders can opt out of picking
-    // Targets: other players in room who are NOT beyond suspicion (they have no tokens)
-    const targets = room.filter(j => j !== i && !S.players[j].beyondSuspicion);
-    const forcedNoPick = targets.length === 0;
-    const currentPick = picks[i] !== undefined ? picks[i] : (canSkip || forcedNoPick ? 'none' : '');
+    const isUsingWeapon = !!weaponUsed[i];
 
     let chips = '';
     if (p.beyondSuspicion) chips += ' <span class="chip chip-beyond">BS</span>';
     if (p.hasWeapon) chips += ' <span class="chip chip-weapon">W</span>';
+
+    // Weapon holders get a toggle to use/not use weapon
+    let weaponToggle = '';
+    if (p.hasWeapon) {
+      weaponToggle = `<div style="margin-bottom:6px;">
+        <button class="btn btn-small" style="width:100%;${isUsingWeapon ? 'color:var(--warn);border-color:rgba(249,168,37,0.4);' : 'color:var(--text-dim);border-color:var(--border);'}"
+          onclick="toggleWeaponUse(${i})">
+          ${isUsingWeapon ? '🔫 Using Weapon — Not participating' : '🔫 Not using weapon — Participating normally'}
+        </button>
+      </div>`;
+    }
+
+    // If using weapon, show as opted out
+    if (isUsingWeapon) {
+      return `<div class="room-player-row" style="opacity:0.6;">
+        <div class="room-player-name">${esc(p.name)}${chips}</div>
+        ${weaponToggle}
+        <div class="room-pick-row"><label style="color:var(--text-dim);font-style:italic;">Opted out — no tokens presented or taken</label></div>
+      </div>`;
+    }
+
+    // Targets: other ACTIVE (non-weapon-using) players who are NOT beyond suspicion
+    const targets = activeInRoom.filter(j => j !== i && !S.players[j].beyondSuspicion);
+    const forcedNoPick = targets.length === 0;
+    const currentPick = picks[i] !== undefined ? picks[i] : (forcedNoPick ? 'none' : '');
 
     let pickUI;
     if (forcedNoPick) {
@@ -553,7 +572,7 @@ function renderRoomPicks() {
       pickUI = `<div class="room-pick-row">
         <label>Picks from:</label>
         <select onchange="setRoomPick(${i},this.value)">
-          ${canSkip ? `<option value="none" ${currentPick==='none'?'selected':''}>No pick</option>` : `<option value="" ${currentPick===''?'selected':''}>Select...</option>`}
+          <option value="" ${currentPick===''?'selected':''}>Select...</option>
           ${targets.map(j => `<option value="${j}" ${currentPick===j?'selected':''}>${esc(S.players[j].name)}</option>`).join('')}
         </select>
       </div>`;
@@ -561,21 +580,25 @@ function renderRoomPicks() {
 
     return `<div class="room-player-row">
       <div class="room-player-name">${esc(p.name)}${chips}</div>
+      ${weaponToggle}
       ${pickUI}
       ${p.beyondSuspicion && !forcedNoPick && currentPick !== 'none' && currentPick !== '' ? '<div style="font-size:0.75rem;color:var(--warn);margin-top:4px;">⚠ Will lose Beyond Suspicion</div>' : ''}
     </div>`;
   }).join('');
 
-  // Validate: all players must have a valid pick assignment
+  // Validate: all active (non-weapon-using) players must have a valid pick
   const allValid = room.every(i => {
-    const canSkip = S.players[i].hasWeapon; // Only weapon holders can opt out
-    const targets = room.filter(j => j !== i && !S.players[j].beyondSuspicion);
+    if (weaponUsed[i]) return true; // Weapon users are opted out, always valid
+    const targets = activeInRoom.filter(j => j !== i && !S.players[j].beyondSuspicion);
+    if (targets.length === 0) return true; // Forced no-pick
     const pick = picks[i];
-    // If no valid targets, forced no-pick is always valid
-    if (targets.length === 0) return true;
-    if (canSkip) return pick !== undefined; // 'none' is valid
     return pick !== undefined && pick !== '' && pick !== 'none';
   });
+
+  // Also check: at least 2 active participants remain (otherwise encounter is pointless)
+  const enoughActive = activeInRoom.length >= 2;
+  // Edge case: if only BS players remain active, no tokens to pick — still allow resolve
+  // but the room-select validation should have caught the all-BS case already
 
   return `<div class="fade-in">
     <div class="header-bar">
@@ -585,11 +608,12 @@ function renderRoomPicks() {
     <div class="card">
       <h2>Who picks from whom?</h2>
       <p style="color:var(--text-dim);font-size:0.85rem;margin-bottom:12px;">
-        Each player picks one token from another player in the room. Beyond Suspicion players have no tokens to pick from.
+        Each player picks one token from another player. Beyond Suspicion players have no tokens. Weapon holders can opt out entirely.
       </p>
       ${rows}
       <div class="gap-md"></div>
-      <button class="btn btn-primary" ${!allValid?'disabled':''} onclick="resolveRoom()">Resolve Encounter</button>
+      ${!enoughActive ? '<p style="color:var(--warn);font-size:0.85rem;margin-bottom:8px;">⚠ Need at least 2 active participants.</p>' : ''}
+      <button class="btn btn-primary" ${!(allValid && enoughActive)?'disabled':''} onclick="resolveRoom()">Resolve Encounter</button>
       <div class="gap-sm"></div>
       <button class="btn btn-secondary" onclick="S.screen='room-select';render()">Back</button>
     </div>
@@ -687,7 +711,7 @@ function revealPlayer(idx) {
 
 // Room encounter
 function startRoomEncounter() {
-  S.room = { playerIndices:[], picks:{} };
+  S.room = { playerIndices:[], picks:{}, weaponUsed:{} };
   S.screen = 'room-select';
   render();
 }
@@ -705,21 +729,50 @@ function toggleRoomPlayer(i) {
 }
 
 function goToRoomPicks() {
-  // Initialize picks
+  // Initialize weapon usage and picks
+  S.room.weaponUsed = {}; // { playerIdx: true/false } — only for weapon holders
   S.room.picks = {};
   for (const i of S.room.playerIndices) {
     const p = S.players[i];
-    const canSkip = p.hasWeapon; // Only weapon holders can opt out
-    // Check if this player has any valid targets (non-BS players in room besides themselves)
-    const targets = S.room.playerIndices.filter(j => j !== i && !S.players[j].beyondSuspicion);
-    if (targets.length === 0) {
-      // No valid targets — force "no pick" regardless of weapon/BS status
-      S.room.picks[i] = 'none';
-    } else {
-      S.room.picks[i] = canSkip ? 'none' : '';
+    if (p.hasWeapon) {
+      S.room.weaponUsed[i] = true; // Default to using weapon (opting out)
     }
   }
+  recalcRoomPicks();
   S.screen = 'room-picks';
+  render();
+}
+
+// Recalculate pick defaults based on who is actively participating
+// (excluding weapon users who opted out)
+function recalcRoomPicks() {
+  const room = S.room.playerIndices;
+  const activeInRoom = room.filter(i => !S.room.weaponUsed[i]);
+
+  for (const i of room) {
+    if (S.room.weaponUsed[i]) {
+      // Using weapon — completely out of encounter
+      S.room.picks[i] = 'none';
+      continue;
+    }
+    // Targets: other ACTIVE players in room who are NOT beyond suspicion
+    const targets = activeInRoom.filter(j => j !== i && !S.players[j].beyondSuspicion);
+    if (targets.length === 0) {
+      S.room.picks[i] = 'none'; // No valid targets
+    } else if (S.room.picks[i] === 'none' || S.room.picks[i] === undefined) {
+      // Reset to unselected if they had no pick before
+      S.room.picks[i] = '';
+    }
+    // If they already have a valid pick, check it's still valid
+    if (typeof S.room.picks[i] === 'number' && !targets.includes(S.room.picks[i])) {
+      S.room.picks[i] = ''; // Target no longer valid
+    }
+  }
+}
+
+function toggleWeaponUse(playerIdx) {
+  S.room.weaponUsed[playerIdx] = !S.room.weaponUsed[playerIdx];
+  recalcRoomPicks();
   render();
 }
 
@@ -729,7 +782,7 @@ function setRoomPick(picker, val) {
 }
 
 function cancelRoom() {
-  S.room = { playerIndices:[], picks:{} };
+  S.room = { playerIndices:[], picks:{}, weaponUsed:{} };
   S.screen = 'main';
   render();
 }
@@ -802,7 +855,7 @@ function confirmReset() {
       const dbg = S.debug;
       S = { screen:'setup-count', playerCount:0, players:[], round:1, encounters:[],
             debug:dbg, confirmModal:null,
-            room:{ playerIndices:[], picks:{} },
+            room:{ playerIndices:[], picks:{}, weaponUsed:{} },
             informQueue:[], informDone:null,
             revealPlayerIdx:null, _revealOverride:null };
       render();
