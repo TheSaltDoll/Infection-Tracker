@@ -435,6 +435,7 @@ function renderMain() {
         ${!p.beyondSuspicion && p.status!=='revealed' ? `<button class="btn btn-small" style="color:var(--blue-glow);border-color:var(--blue);" onclick="setBeyondSuspicion(${i})">BS</button>` : ''}
         ${p.beyondSuspicion ? `<button class="btn btn-small" style="color:var(--text-dim);border-color:var(--border);" onclick="removeBeyondSuspicion(${i})">-BS</button>` : ''}
         ${!p.hasWeapon ? `<button class="btn btn-small" style="color:var(--warn);border-color:rgba(249,168,37,0.4);" onclick="toggleWeapon(${i})">+W</button>` : `<button class="btn btn-small" style="color:var(--text-dim);border-color:var(--border);" onclick="toggleWeapon(${i})">-W</button>`}
+        <button class="btn btn-small" style="color:var(--human-glow);border-color:var(--human);" onclick="testPlayer(${i})">Test</button>
         <button class="btn btn-danger btn-small" onclick="revealPlayer(${i})">Reveal</button>
       </div>
     </div>`;
@@ -739,6 +740,35 @@ function revealPlayer(idx) {
   S.confirmModal = {
     message: `Reveal ${esc(S.players[idx].name)} as a Thing? They will be removed from the game.`,
     onConfirm: () => { S.players[idx].status='revealed'; S.players[idx].beyondSuspicion=false; render(); }
+  };
+  render();
+}
+
+function testPlayer(idx) {
+  const p = S.players[idx];
+  S.confirmModal = {
+    message: `Test ${esc(p.name)}? Their true infection status will be revealed to all players.`,
+    onConfirm: () => {
+      if (p.status === 'thing') {
+        // Infected — Reveal them (removed from game)
+        p.status = 'revealed';
+        p.beyondSuspicion = false;
+        S.confirmModal = {
+          message: `☣ ${esc(p.name)} is INFECTED! They have been Revealed and removed from the game.`,
+          onConfirm: () => { render(); }
+        };
+      } else {
+        // Human — grant Beyond Suspicion
+        p.beyondSuspicion = true;
+        // Clear from inform/check-in lists: their status is now public knowledge
+        p.lastCheckedInRound = S.round;
+        S.confirmModal = {
+          message: `✅ ${esc(p.name)} is HUMAN! They are now Beyond Suspicion.`,
+          onConfirm: () => { render(); }
+        };
+      }
+      render();
+    }
   };
   render();
 }
