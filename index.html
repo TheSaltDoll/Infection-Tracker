@@ -8,140 +8,119 @@
 <meta name="apple-mobile-web-app-title" content="Thing Tracker">
 <meta name="theme-color" content="#0a0a0f">
 <title>Thing Tracker</title>
-<link rel="apple-touch-icon" href="infect-icon.png">
 <style>
 :root {
-  --bg: #0a0a0f; --bg2: #12121a; --bg3: #1a1a25;
-  --surface: #1e1e2a; --surface2: #252535; --border: #2a2a3a;
-  --text: #e0dde6; --text-dim: #8885a0;
-  --accent: #c62828; --accent-glow: #e53935; --accent-dim: #7f1d1d;
-  --human: #2e7d32; --human-glow: #43a047;
-  --warn: #f9a825; --blue: #1565c0; --blue-glow: #42a5f5;
-  --radius: 12px;
-  --safe-top: env(safe-area-inset-top, 20px);
-  --safe-bottom: env(safe-area-inset-bottom, 20px);
+  --bg:#0a0a0f;--bg2:#12121a;--bg3:#1a1a25;--surface:#1e1e2a;--surface2:#252535;--border:#2a2a3a;
+  --text:#e0dde6;--text-dim:#8885a0;--accent:#c62828;--accent-glow:#e53935;--accent-dim:#7f1d1d;
+  --human:#2e7d32;--human-glow:#43a047;--warn:#f9a825;--blue:#1565c0;--blue-glow:#42a5f5;
+  --radius:12px;--safe-top:env(safe-area-inset-top,20px);--safe-bottom:env(safe-area-inset-bottom,20px);
 }
-* { margin:0; padding:0; box-sizing:border-box; }
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
-  background: var(--bg); color: var(--text);
-  min-height: 100dvh; overflow-x: hidden;
-  -webkit-tap-highlight-color: transparent;
-  padding-top: var(--safe-top); padding-bottom: var(--safe-bottom);
-}
-body::before {
-  content:''; position:fixed; top:-50%; left:-50%; width:200%; height:200%;
-  background: radial-gradient(ellipse at 30% 20%, rgba(198,40,40,0.06) 0%, transparent 50%),
-              radial-gradient(ellipse at 70% 80%, rgba(198,40,40,0.04) 0%, transparent 50%);
-  animation: ambientShift 20s ease-in-out infinite; pointer-events:none; z-index:0;
-}
-@keyframes ambientShift { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-5%,3%)} }
-#app { position:relative; z-index:1; max-width:480px; margin:0 auto; padding:16px; min-height:100dvh; }
-h1 { font-size:1.6rem; font-weight:700; text-align:center; margin-bottom:4px; letter-spacing:2px; text-transform:uppercase; color:var(--accent-glow); text-shadow:0 0 20px rgba(229,57,53,0.4); }
-h2 { font-size:1.1rem; font-weight:600; margin-bottom:12px; color:var(--text); }
-.subtitle { text-align:center; color:var(--text-dim); font-size:0.8rem; letter-spacing:3px; text-transform:uppercase; margin-bottom:24px; }
-.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px; margin-bottom:16px; }
-.btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:14px 24px; border:none; border-radius:var(--radius); font-size:1rem; font-weight:600; cursor:pointer; transition:all 0.2s; width:100%; -webkit-appearance:none; }
-.btn-primary { background:var(--accent); color:#fff; box-shadow:0 4px 15px rgba(198,40,40,0.3); }
-.btn-primary:active { background:var(--accent-dim); transform:scale(0.98); }
-.btn-primary:disabled { background:var(--surface2); color:var(--text-dim); box-shadow:none; cursor:default; }
-.btn-secondary { background:var(--surface2); color:var(--text); border:1px solid var(--border); }
-.btn-secondary:active { background:var(--bg3); transform:scale(0.98); }
-.btn-danger { background:transparent; color:var(--accent-glow); border:1px solid var(--accent-dim); }
-.btn-danger:active { background:var(--accent-dim); }
-.btn-small { padding:8px 16px; font-size:0.85rem; width:auto; }
-input,select { width:100%; padding:12px 16px; background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); color:var(--text); font-size:1rem; outline:none; -webkit-appearance:none; }
-input:focus,select:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(198,40,40,0.15); }
-.player-count-picker { display:flex; gap:8px; justify-content:center; margin:16px 0; }
-.player-count-picker button { width:52px; height:52px; border-radius:50%; border:2px solid var(--border); background:var(--surface); color:var(--text); font-size:1.2rem; font-weight:700; cursor:pointer; transition:all 0.2s; }
-.player-count-picker button.selected { border-color:var(--accent-glow); background:var(--accent-dim); color:#fff; box-shadow:0 0 12px rgba(229,57,53,0.3); }
-.name-input-row { display:flex; gap:8px; align-items:center; margin-bottom:10px; }
-.name-input-row span { color:var(--text-dim); font-size:0.85rem; min-width:24px; }
-.round-badge { display:inline-flex; align-items:center; gap:6px; background:var(--surface2); border:1px solid var(--border); border-radius:20px; padding:6px 16px; font-size:0.85rem; color:var(--text-dim); font-weight:600; }
-.round-badge .num { color:var(--accent-glow); font-size:1.1rem; }
-.header-bar { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
-.player-list-item { display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); margin-bottom:8px; }
-.player-list-item .name { font-weight:600; font-size:1rem; }
-.status-badge { font-size:0.75rem; font-weight:600; letter-spacing:1px; text-transform:uppercase; padding:4px 10px; border-radius:8px; }
-.status-human { color:var(--human-glow); background:rgba(46,125,50,0.15); }
-.status-thing { color:var(--accent-glow); background:rgba(198,40,40,0.15); }
-.status-revealed { color:var(--warn); background:rgba(249,168,37,0.15); }
-.status-beyond { color:var(--blue-glow); background:rgba(21,101,192,0.15); }
-.inform-tag { font-size:0.7rem; color:var(--text-dim); margin-top:2px; }
-.inform-tag.soon { color:var(--warn); }
-.screen-overlay { position:fixed; top:0; left:0; right:0; bottom:0; background:var(--bg); z-index:100; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:32px; text-align:center; }
-.reveal-icon { font-size:4rem; margin-bottom:16px; }
-.reveal-status { font-size:1.8rem; font-weight:800; letter-spacing:2px; text-transform:uppercase; margin-bottom:8px; }
-.reveal-status.thing { color:var(--accent-glow); text-shadow:0 0 30px rgba(229,57,53,0.5); }
-.reveal-status.human { color:var(--human-glow); text-shadow:0 0 30px rgba(67,160,71,0.5); }
-.reveal-flavor { color:var(--text-dim); font-size:0.95rem; margin-bottom:32px; line-height:1.5; }
-.player-select-list button { display:block; width:100%; padding:16px; margin-bottom:8px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); color:var(--text); font-size:1.1rem; font-weight:600; cursor:pointer; text-align:left; transition:all 0.15s; }
-.player-select-list button:active { background:var(--surface2); transform:scale(0.98); }
-.debug-switch { position:fixed; bottom:10px; right:10px; z-index:50; display:flex; align-items:center; gap:4px; opacity:0.2; transition:opacity 0.3s; }
-.debug-switch:hover,.debug-switch:active,.debug-switch.active { opacity:0.85; }
-.debug-switch label { font-size:0.55rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px; cursor:pointer; user-select:none; }
-.debug-switch.active label { color:var(--accent-glow); }
-.toggle-track { width:28px; height:16px; border-radius:8px; background:var(--surface2); border:1px solid var(--border); position:relative; cursor:pointer; transition:all 0.2s; }
-.toggle-track.on { background:var(--accent-dim); border-color:var(--accent); }
-.toggle-knob { width:12px; height:12px; border-radius:50%; background:var(--text-dim); position:absolute; top:1px; left:1px; transition:all 0.2s; }
-.toggle-track.on .toggle-knob { left:13px; background:var(--accent-glow); }
-.debug-panel { background:rgba(198,40,40,0.08); border:1px solid var(--accent-dim); border-radius:var(--radius); padding:12px 16px; margin-bottom:16px; }
-.debug-panel h3 { color:var(--accent-glow); font-size:0.75rem; letter-spacing:2px; text-transform:uppercase; margin-bottom:8px; }
-.debug-row { display:flex; justify-content:space-between; align-items:center; padding:4px 0; border-bottom:1px solid rgba(255,255,255,0.05); }
-.debug-row:last-child { border:none; }
-.debug-detail { font-size:0.7rem; color:var(--text-dim); }
-.encounter-log-item { font-size:0.8rem; color:var(--text-dim); padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.03); }
-.encounter-log-item:last-child { border:none; }
-.encounter-result { font-size:0.7rem; margin-top:2px; }
-.encounter-result.infected { color:var(--accent-glow); }
-.encounter-result.safe { color:var(--human-glow); }
-.encounter-result.no-risk { color:var(--text-dim); }
-.confirm-modal { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.7); z-index:90; display:flex; align-items:center; justify-content:center; padding:24px; }
-.confirm-modal .modal-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:24px; max-width:340px; width:100%; text-align:center; }
-.confirm-modal .modal-card p { margin-bottom:20px; color:var(--text); line-height:1.5; }
-.confirm-modal .modal-btns { display:flex; gap:10px; }
-.gap-sm { height:8px; } .gap-md { height:16px; }
-.fade-in { animation:fadeIn 0.3s ease; }
-@keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
-
-/* Room encounter styles */
-.room-player-row { padding:10px 14px; background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); margin-bottom:8px; }
-.room-player-name { font-weight:600; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center; }
-.room-pick-row { display:flex; align-items:center; gap:8px; }
-.room-pick-row label { font-size:0.8rem; color:var(--text-dim); white-space:nowrap; }
-.room-pick-row select { flex:1; padding:8px 12px; font-size:0.9rem; }
-.chip { display:inline-block; padding:2px 8px; border-radius:6px; font-size:0.7rem; font-weight:600; letter-spacing:0.5px; }
-.chip-beyond { color:var(--blue-glow); background:rgba(21,101,192,0.2); }
-.chip-weapon { color:var(--warn); background:rgba(249,168,37,0.15); }
-.player-action-btns { display:flex; gap:6px; flex-wrap:wrap; }
-.player-action-btns .btn-small { font-size:0.75rem; padding:5px 10px; }
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Helvetica Neue',sans-serif;background:var(--bg);color:var(--text);min-height:100dvh;overflow-x:hidden;-webkit-tap-highlight-color:transparent;padding-top:var(--safe-top);padding-bottom:var(--safe-bottom);}
+body::before{content:'';position:fixed;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(ellipse at 30% 20%,rgba(198,40,40,0.06) 0%,transparent 50%),radial-gradient(ellipse at 70% 80%,rgba(198,40,40,0.04) 0%,transparent 50%);animation:ambientShift 20s ease-in-out infinite;pointer-events:none;z-index:0;}
+@keyframes ambientShift{0%,100%{transform:translate(0,0)}50%{transform:translate(-5%,3%)}}
+#app{position:relative;z-index:1;max-width:480px;margin:0 auto;padding:16px;min-height:100dvh;}
+h1{font-size:1.6rem;font-weight:700;text-align:center;margin-bottom:4px;letter-spacing:2px;text-transform:uppercase;color:var(--accent-glow);text-shadow:0 0 20px rgba(229,57,53,0.4);}
+h2{font-size:1.1rem;font-weight:600;margin-bottom:12px;color:var(--text);}
+.subtitle{text-align:center;color:var(--text-dim);font-size:0.8rem;letter-spacing:3px;text-transform:uppercase;margin-bottom:24px;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px;}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:14px 24px;border:none;border-radius:var(--radius);font-size:1rem;font-weight:600;cursor:pointer;transition:all 0.2s;width:100%;-webkit-appearance:none;}
+.btn-primary{background:var(--accent);color:#fff;box-shadow:0 4px 15px rgba(198,40,40,0.3);}
+.btn-primary:active{background:var(--accent-dim);transform:scale(0.98);}
+.btn-primary:disabled{background:var(--surface2);color:var(--text-dim);box-shadow:none;cursor:default;}
+.btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border);}
+.btn-secondary:active{background:var(--bg3);transform:scale(0.98);}
+.btn-danger{background:transparent;color:var(--accent-glow);border:1px solid var(--accent-dim);}
+.btn-danger:active{background:var(--accent-dim);}
+.btn-small{padding:8px 16px;font-size:0.85rem;width:auto;}
+input,select{width:100%;padding:12px 16px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:1rem;outline:none;-webkit-appearance:none;}
+input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(198,40,40,0.15);}
+.player-count-picker{display:flex;gap:8px;justify-content:center;margin:16px 0;}
+.player-count-picker button{width:52px;height:52px;border-radius:50%;border:2px solid var(--border);background:var(--surface);color:var(--text);font-size:1.2rem;font-weight:700;cursor:pointer;transition:all 0.2s;}
+.player-count-picker button.selected{border-color:var(--accent-glow);background:var(--accent-dim);color:#fff;box-shadow:0 0 12px rgba(229,57,53,0.3);}
+.name-input-row{display:flex;gap:8px;align-items:center;margin-bottom:10px;}
+.name-input-row span{color:var(--text-dim);font-size:0.85rem;min-width:24px;}
+.round-badge{display:inline-flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:6px 16px;font-size:0.85rem;color:var(--text-dim);font-weight:600;}
+.round-badge .num{color:var(--accent-glow);font-size:1.1rem;}
+.header-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+.player-list-item{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:8px;}
+.player-list-item .name{font-weight:600;font-size:1rem;}
+.status-badge{font-size:0.75rem;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:4px 10px;border-radius:8px;}
+.status-human{color:var(--human-glow);background:rgba(46,125,50,0.15);}
+.status-thing{color:var(--accent-glow);background:rgba(198,40,40,0.15);}
+.status-revealed{color:var(--warn);background:rgba(249,168,37,0.15);}
+.status-beyond{color:var(--blue-glow);background:rgba(21,101,192,0.15);}
+.inform-tag{font-size:0.7rem;color:var(--text-dim);margin-top:2px;}
+.inform-tag.soon{color:var(--warn);}
+.screen-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg);z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;text-align:center;}
+.reveal-icon{font-size:4rem;margin-bottom:16px;}
+.reveal-status{font-size:1.8rem;font-weight:800;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;}
+.reveal-status.thing{color:var(--accent-glow);text-shadow:0 0 30px rgba(229,57,53,0.5);}
+.reveal-status.human{color:var(--human-glow);text-shadow:0 0 30px rgba(67,160,71,0.5);}
+.reveal-flavor{color:var(--text-dim);font-size:0.95rem;margin-bottom:32px;line-height:1.5;}
+.player-select-list button{display:block;width:100%;padding:16px;margin-bottom:8px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:1.1rem;font-weight:600;cursor:pointer;text-align:left;transition:all 0.15s;}
+.player-select-list button:active{background:var(--surface2);transform:scale(0.98);}
+.debug-switch{position:fixed;bottom:10px;right:10px;z-index:50;display:flex;align-items:center;gap:4px;opacity:0.2;transition:opacity 0.3s;}
+.debug-switch:hover,.debug-switch:active,.debug-switch.active{opacity:0.85;}
+.debug-switch label{font-size:0.55rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;cursor:pointer;user-select:none;}
+.debug-switch.active label{color:var(--accent-glow);}
+.toggle-track{width:28px;height:16px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);position:relative;cursor:pointer;transition:all 0.2s;}
+.toggle-track.on{background:var(--accent-dim);border-color:var(--accent);}
+.toggle-knob{width:12px;height:12px;border-radius:50%;background:var(--text-dim);position:absolute;top:1px;left:1px;transition:all 0.2s;}
+.toggle-track.on .toggle-knob{left:13px;background:var(--accent-glow);}
+.debug-panel{background:rgba(198,40,40,0.08);border:1px solid var(--accent-dim);border-radius:var(--radius);padding:12px 16px;margin-bottom:16px;}
+.debug-panel h3{color:var(--accent-glow);font-size:0.75rem;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;}
+.debug-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05);}
+.debug-row:last-child{border:none;}
+.debug-detail{font-size:0.7rem;color:var(--text-dim);}
+.encounter-log-item{font-size:0.8rem;color:var(--text-dim);padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.03);}
+.encounter-log-item:last-child{border:none;}
+.encounter-result{font-size:0.7rem;margin-top:2px;}
+.encounter-result.infected{color:var(--accent-glow);}
+.encounter-result.safe{color:var(--human-glow);}
+.encounter-result.no-risk{color:var(--text-dim);}
+.confirm-modal{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:90;display:flex;align-items:center;justify-content:center;padding:24px;}
+.confirm-modal .modal-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;max-width:340px;width:100%;text-align:center;}
+.confirm-modal .modal-card p{margin-bottom:20px;color:var(--text);line-height:1.5;}
+.confirm-modal .modal-btns{display:flex;gap:10px;}
+.gap-sm{height:8px;}.gap-md{height:16px;}
+.fade-in{animation:fadeIn 0.3s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.room-player-row{padding:10px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:8px;}
+.room-player-name{font-weight:600;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;}
+.room-pick-row{display:flex;align-items:center;gap:8px;}
+.room-pick-row label{font-size:0.8rem;color:var(--text-dim);white-space:nowrap;}
+.room-pick-row select{flex:1;padding:8px 12px;font-size:0.9rem;}
+.chip{display:inline-block;padding:2px 8px;border-radius:6px;font-size:0.7rem;font-weight:600;letter-spacing:0.5px;}
+.chip-beyond{color:var(--blue-glow);background:rgba(21,101,192,0.2);}
+.chip-weapon{color:var(--warn);background:rgba(249,168,37,0.15);}
+.player-action-btns{display:flex;gap:6px;flex-wrap:wrap;}
+.player-action-btns .btn-small{font-size:0.75rem;padding:5px 10px;}
+.phase-banner{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;margin-bottom:12px;}
+.phase-title{font-size:0.9rem;font-weight:700;color:var(--accent-glow);margin-bottom:4px;}
+.phase-desc{font-size:0.8rem;color:var(--text-dim);line-height:1.4;}
+.phase-item{padding:6px 0;font-size:0.85rem;color:var(--text-dim);border-bottom:1px solid rgba(255,255,255,0.03);}
+.phase-item:last-child{border:none;}
 </style>
 </head>
 <body>
-
 <div id="app"></div>
-
 <div class="debug-switch" id="debugSwitch" onclick="toggleDebug()">
   <label>dbg</label>
   <div class="toggle-track" id="debugTrack"><div class="toggle-knob"></div></div>
 </div>
-
 <script>
 // ─── State ───
-// Player: { name, status:'human'|'thing'|'revealed', statusAtStartOfRound,
-//           infectedOnRound, informed, informedOnRound, lastCheckedInRound,
-//           beyondSuspicion:bool, hasWeapon:bool, inEncounterThisRound:bool }
 let S = {
   screen: 'setup-count',
   playerCount: 0,
   players: [],
   round: 1,
-  encounters: [], // { round, room:[idx,...], picks:[{picker,target},...], results:[string,...] }
+  phase: 'phase1-3', // phase1-3, phase4, phase5, phase6, phase7-8
+  encounters: [],
   debug: false,
   confirmModal: null,
-  // Room encounter building state
   room: { playerIndices:[], picks:{}, weaponUsed:{}, hasDog:false },
-  // End-of-round inform
   informQueue: [],
   informDone: null,
   revealPlayerIdx: null,
@@ -157,42 +136,34 @@ function toggleDebug() {
   document.getElementById('debugTrack').classList.toggle('on', S.debug);
   render();
 }
-
 function esc(s) { const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
 
 // ─── Helpers ───
-
 function getActivePlayerIndices() {
   return S.players.map((_,i)=>i).filter(i=>S.players[i].status!=='revealed');
 }
-
-// Players eligible for room placement: active and not yet in an encounter this round
 function getAvailableForRoom() {
   return getActivePlayerIndices().filter(i => !S.players[i].inEncounterThisRound);
 }
-
 function snapshotStartOfRound() {
   for (const p of S.players) p.statusAtStartOfRound = p.status;
 }
 
 // ─── Inform list logic ───
-// Round 1: all active players (anyone could be initial Thing)
-// Round 2+: players who PICKED A TOKEN in an encounter in a previous round and haven't
-//   checked in since, plus uninformed Things who are due.
-//   Players who didn't pick (BS player observing, weapon holder opting out) are excluded.
 function buildInformList() {
   const active = getActivePlayerIndices();
-  if (S.round === 1) return [...active];
-
+  if (S.round === 1) {
+    // Everyone checks in round 1, EXCEPT players whose status is already public
+    // (tested this round — lastCheckedInRound >= current round)
+    return active.filter(i => !S.players[i].lastCheckedInRound || S.players[i].lastCheckedInRound < S.round);
+  }
   const list = new Set();
   for (const i of active) {
     const p = S.players[i];
-    // Uninformed Thing who is due
     if (p.status === 'thing' && !p.informed) {
       const dueRound = (p.infectedOnRound === 0) ? 1 : p.infectedOnRound + 1;
       if (S.round >= dueRound) list.add(i);
     }
-    // Player picked a token in a previous round's encounter and hasn't checked in since
     const lastChecked = p.lastCheckedInRound || 0;
     const needsCheckIn = S.encounters.some(e =>
       e.activePickers && e.activePickers.includes(i) &&
@@ -202,7 +173,6 @@ function buildInformList() {
   }
   return [...list];
 }
-
 function getPlayersToInformNextRound() {
   const next = new Set();
   for (let i = 0; i < S.players.length; i++) {
@@ -212,7 +182,6 @@ function getPlayersToInformNextRound() {
       const dueRound = (p.infectedOnRound === 0) ? 1 : p.infectedOnRound + 1;
       if (dueRound === S.round + 1) next.add(i);
     }
-    // Encounters this round where player picked a token trigger check-in next round
     const lastChecked = p.lastCheckedInRound || 0;
     const hasCurEnc = S.encounters.some(e =>
       e.activePickers && e.activePickers.includes(i) &&
@@ -229,44 +198,27 @@ function resolveRoom() {
   const picks = S.room.picks;
   const weaponUsed = S.room.weaponUsed || {};
   const results = [];
-
-  // If Dog was present and kenneled, note it
   if (S.room.dogResult === 'kenneled') {
     results.push('🐕 Dog was Kenneled — no infection from Dog');
   }
-
-  // Use start-of-round statuses for determining tokens
-  // Each Thing (at start of round) presents 1 Thing token + 1 Human token
-  // Each Human presents 2 Human tokens
-  // Beyond Suspicion players present no tokens
-  // Weapon users who opted out present no tokens and don't pick
-
-  // Track how many people pick from each target
   const picksFromTarget = {};
   for (const pickerStr of Object.keys(picks)) {
     const picker = parseInt(pickerStr);
     const target = picks[pickerStr];
     if (target === 'none') continue;
-    if (weaponUsed[picker]) continue; // Weapon user opted out
+    if (weaponUsed[picker]) continue;
     if (!picksFromTarget[target]) picksFromTarget[target] = [];
     picksFromTarget[target].push(picker);
   }
-
   const infections = [];
-
   for (const targetStr of Object.keys(picksFromTarget)) {
     const target = parseInt(targetStr);
     const pickers = picksFromTarget[target];
     const targetStartStatus = S.players[target].statusAtStartOfRound;
-
     if (targetStartStatus !== 'thing') {
-      for (const p of pickers) {
-        results.push(`${esc(S.players[p].name)} picked from ${esc(S.players[target].name)} — Human token`);
-      }
+      for (const p of pickers) results.push(`${esc(S.players[p].name)} picked from ${esc(S.players[target].name)} — Human token`);
       continue;
     }
-
-    // Target is a Thing — 1 Thing token, 1 Human token
     if (pickers.length === 1) {
       if (Math.random() < 0.5) {
         infections.push({ infected: pickers[0], by: target });
@@ -286,8 +238,6 @@ function resolveRoom() {
       }
     }
   }
-
-  // Log weapon users and non-pickers
   for (const i of room) {
     if (weaponUsed[i]) {
       results.push(`${esc(S.players[i].name)} used weapon — did not participate`);
@@ -295,8 +245,6 @@ function resolveRoom() {
       results.push(`${esc(S.players[i].name)} did not pick a token`);
     }
   }
-
-  // Apply infections
   for (const inf of infections) {
     const p = S.players[inf.infected];
     if (p.statusAtStartOfRound === 'human' && p.status === 'human') {
@@ -304,39 +252,19 @@ function resolveRoom() {
       p.infectedOnRound = S.round;
     }
   }
-
-  // Remove Beyond Suspicion from anyone who picked a token
-  // Track who actually picked (for inform list purposes)
   const activePickers = [];
   for (const pickerStr of Object.keys(picks)) {
     const picker = parseInt(pickerStr);
-    if (weaponUsed[picker]) continue; // Weapon users don't count
+    if (weaponUsed[picker]) continue;
     if (picks[pickerStr] !== 'none') {
       S.players[picker].beyondSuspicion = false;
       activePickers.push(picker);
     }
   }
-
-  // Mark all room participants as having been in a room this round (for room-per-round limit)
-  // Even weapon users — they were physically in the room and can't go to another
-  for (const i of room) {
-    S.players[i].inEncounterThisRound = true;
-  }
-
-  // Save encounter record
-  S.encounters.push({
-    round: S.round,
-    room: [...room],
-    picks: {...picks},
-    weaponUsed: {...weaponUsed},
-    activePickers: activePickers,
-    results: results,
-    hasDog: !!S.room.hasDog,
-  });
-
-  // Reset room state
-  S.room = { playerIndices: [], picks: {}, weaponUsed: {}, hasDog: false };
-  S.screen = 'main';
+  for (const i of room) S.players[i].inEncounterThisRound = true;
+  S.encounters.push({ round:S.round, room:[...room], picks:{...picks}, weaponUsed:{...weaponUsed}, activePickers, results, hasDog:!!S.room.hasDog });
+  S.room = { playerIndices:[], picks:{}, weaponUsed:{}, hasDog:false };
+  S.screen = 'phase4';
   render();
 }
 
@@ -346,147 +274,264 @@ function render() {
   switch (S.screen) {
     case 'setup-count': app.innerHTML = renderSetupCount(); break;
     case 'setup-names': app.innerHTML = renderSetupNames(); break;
-    case 'main': app.innerHTML = renderMain(); break;
+    case 'phase1-3': app.innerHTML = renderPhase13(); break;
+    case 'phase4': app.innerHTML = renderPhase4(); break;
+    case 'phase5': app.innerHTML = renderPhase5(); break;
+    case 'phase6': app.innerHTML = renderPhase6(); break;
+    case 'phase7-8': app.innerHTML = renderPhase78(); break;
     case 'room-select': app.innerHTML = renderRoomSelect(); break;
     case 'room-picks': app.innerHTML = renderRoomPicks(); break;
     case 'end-round-select': app.innerHTML = renderEndRoundSelect(); break;
     case 'reveal-status': app.innerHTML = renderRevealStatus(); break;
-    default: app.innerHTML = renderMain();
+    default: app.innerHTML = renderPhase13();
   }
   if (S.confirmModal) app.innerHTML += renderConfirmModal();
 }
 
 function renderSetupCount() {
-  return `
-    <div class="fade-in" style="padding-top:60px;">
-      <h1>The Thing</h1><div class="subtitle">Infection Tracker</div>
-      <div class="card">
-        <h2 style="text-align:center;">How many players?</h2>
-        <div class="player-count-picker">
-          ${[4,5,6,7,8].map(n=>`<button class="${S.playerCount===n?'selected':''}" onclick="selectCount(${n})">${n}</button>`).join('')}
-        </div>
-        <div class="gap-md"></div>
-        <button class="btn btn-primary" ${!S.playerCount?'disabled':''} onclick="S.screen='setup-names';render()">Continue</button>
-      </div>
-    </div>`;
+  return `<div class="fade-in" style="padding-top:60px;">
+    <h1>The Thing</h1><div class="subtitle">Infection Tracker</div>
+    <div class="card"><h2 style="text-align:center;">How many players?</h2>
+      <div class="player-count-picker">
+        ${[4,5,6,7,8].map(n=>`<button class="${S.playerCount===n?'selected':''}" onclick="selectCount(${n})">${n}</button>`).join('')}
+      </div><div class="gap-md"></div>
+      <button class="btn btn-primary" ${!S.playerCount?'disabled':''} onclick="S.screen='setup-names';render()">Continue</button>
+    </div></div>`;
 }
 
 function renderSetupNames() {
   const allFilled = S.players.length===S.playerCount && S.players.every(p=>p.name.trim());
-  return `
-    <div class="fade-in">
-      <h1>The Thing</h1><div class="subtitle">Infection Tracker</div>
-      <div class="card">
-        <h2>Enter Player Names</h2>
-        ${S.players.map((p,i)=>`
-          <div class="name-input-row"><span>${i+1}.</span>
-            <input type="text" placeholder="Player ${i+1}" value="${esc(p.name)}"
-              oninput="updateName(${i},this.value)" autocomplete="off" autocorrect="off"/>
-          </div>`).join('')}
-        <div class="gap-md"></div>
-        <button class="btn btn-primary" ${!allFilled?'disabled':''} onclick="startGame()">Start Game</button>
-        <div class="gap-sm"></div>
-        <button class="btn btn-secondary" onclick="S.screen='setup-count';render()">Back</button>
-      </div>
-    </div>`;
+  return `<div class="fade-in">
+    <h1>The Thing</h1><div class="subtitle">Infection Tracker</div>
+    <div class="card"><h2>Enter Player Names</h2>
+      ${S.players.map((p,i)=>`<div class="name-input-row"><span>${i+1}.</span>
+        <input type="text" placeholder="Player ${i+1}" value="${esc(p.name)}" oninput="updateName(${i},this.value)" autocomplete="off" autocorrect="off"/></div>`).join('')}
+      <div class="gap-md"></div>
+      <button class="btn btn-primary" ${!allFilled?'disabled':''} onclick="startGame()">Start Game</button>
+      <div class="gap-sm"></div>
+      <button class="btn btn-secondary" onclick="S.screen='setup-count';render()">Back</button>
+    </div></div>`;
 }
 
-function renderMain() {
+// ─── Debug panel (reusable) ───
+function renderDebug() {
+  if (!S.debug) return '';
+  return `<div class="debug-panel"><h3>🔧 Debug — True Status</h3>
+    ${S.players.map((p,i)=>`<div class="debug-row"><div><span>${esc(p.name)}</span>
+      <div class="debug-detail">
+        ${p.infectedOnRound!==null?'Infected R'+p.infectedOnRound:'Not infected'}
+        ${p.informed?' · Informed R'+p.informedOnRound:p.status==='thing'?' · NOT yet informed':''}
+        ${p.lastCheckedInRound?' · Check-in R'+p.lastCheckedInRound:''}
+        ${p.beyondSuspicion?' · BEYOND SUSPICION':''}
+        ${p.hasWeapon?' · HAS WEAPON':''}
+      </div></div>
+      <span class="status-badge ${p.status==='thing'?'status-thing':p.status==='revealed'?'status-revealed':'status-human'}">${p.status.toUpperCase()}</span>
+    </div>`).join('')}</div>`;
+}
+
+// ─── Revealed players panel (reusable) ───
+function renderRevealed() {
+  const revealed = S.players.filter(p=>p.status==='revealed');
+  if (!revealed.length) return '';
+  return `<div class="card"><h2>Revealed / Absorbed</h2>
+    ${revealed.map(p=>`<div class="player-list-item" style="opacity:0.5;"><div class="name">${esc(p.name)}</div><span class="status-badge status-revealed">Out</span></div>`).join('')}</div>`;
+}
+
+// ─── Encounter log (reusable) ───
+function renderEncounterLog() {
+  const roundEncs = S.encounters.filter(e=>e.round===S.round);
+  if (!roundEncs.length) return '';
+  return `<div class="card"><h2>Round ${S.round} Encounters</h2>
+    ${roundEncs.map(e=>`<div class="encounter-log-item">
+      <strong>Room:</strong> ${e.room.map(i=>esc(S.players[i].name)).join(', ')}${e.hasDog?' 🐕':''} — Resolved
+      ${S.debug ? e.results.map(r=>`<div class="encounter-result ${r.includes('☣')?'infected':'no-risk'}">${r}</div>`).join('') : ''}
+    </div>`).join('')}</div>`;
+}
+
+// ─── Phase header (reusable) ───
+function phaseHeader() {
+  return `<div class="header-bar">
+    <h1 style="font-size:1.2rem;margin:0;">The Thing</h1>
+    <div class="round-badge">Round <span class="num">${S.round}</span></div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════
+// PHASE 1-3: Informational
+// ═══════════════════════════════════════
+function renderPhase13() {
+  return `<div class="fade-in">
+    ${phaseHeader()}
+    ${renderDebug()}
+    <div class="phase-banner">
+      <div class="phase-title">Phases 1–3</div>
+      <div class="phase-item">1. 🎲 Roll Weather Die</div>
+      <div class="phase-item">2. 🔧 Base Maintenance & Rescue Progress</div>
+      <div class="phase-item">3. 👾 Alien Actions</div>
+      <div class="phase-desc" style="margin-top:8px;">Complete these phases on the board, then proceed.</div>
+    </div>
+    ${renderRevealed()}
+    <button class="btn btn-primary" onclick="S.phase='phase4';S.screen='phase4';render()">Proceed to Phase 4</button>
+    <div class="gap-md"></div>
+    <button class="btn btn-danger btn-small" style="width:100%;" onclick="confirmReset()">Reset Game</button>
+    <div class="gap-md"></div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════
+// PHASE 4: Draw Cards & Take Actions
+// ═══════════════════════════════════════
+function renderPhase4() {
   const active = getActivePlayerIndices();
   const available = getAvailableForRoom();
-  const informList = buildInformList();
-  const informNext = getPlayersToInformNextRound();
 
-  // Debug
-  let debugHtml = '';
-  if (S.debug) {
-    debugHtml = `<div class="debug-panel"><h3>🔧 Debug — True Status</h3>
-      ${S.players.map((p,i)=>`<div class="debug-row"><div><span>${esc(p.name)}</span>
-        <div class="debug-detail">
-          ${p.infectedOnRound!==null?'Infected R'+p.infectedOnRound:'Not infected'}
-          ${p.informed?' · Informed R'+p.informedOnRound:p.status==='thing'?' · NOT yet informed':''}
-          ${p.lastCheckedInRound?' · Check-in R'+p.lastCheckedInRound:''}
-          ${p.beyondSuspicion?' · BEYOND SUSPICION':''}
-          ${p.hasWeapon?' · HAS WEAPON':''}
-        </div></div>
-        <span class="status-badge ${p.status==='thing'?'status-thing':p.status==='revealed'?'status-revealed':'status-human'}">${p.status.toUpperCase()}</span>
-      </div>`).join('')}</div>`;
-  }
-
-  // Player rows
+  // Player list with encounter status, BS, reveal, absorb buttons
   const playerRows = active.map(i => {
     const p = S.players[i];
-    let tag = '';
-    if (informList.includes(i)) tag = `<div class="inform-tag soon">📋 Check-in: end of this round</div>`;
-    else if (informNext.includes(i)) tag = `<div class="inform-tag">Check-in: end of next round</div>`;
-
     let chips = '';
-    if (p.beyondSuspicion) chips += ' <span class="chip chip-beyond">Beyond Suspicion</span>';
-    if (p.hasWeapon) chips += ' <span class="chip chip-weapon">Weapon</span>';
-
+    if (p.beyondSuspicion) chips += ' <span class="chip chip-beyond">BS</span>';
+    if (p.hasWeapon) chips += ' <span class="chip chip-weapon">W</span>';
     const encDone = p.inEncounterThisRound ? ' <span style="font-size:0.7rem;color:var(--text-dim);">(in room)</span>' : '';
 
     return `<div class="player-list-item">
-      <div>
-        <div class="name">${esc(p.name)}${chips}${encDone}</div>
-        ${tag}
-      </div>
+      <div><div class="name">${esc(p.name)}${chips}${encDone}</div></div>
       <div class="player-action-btns">
-        ${!p.beyondSuspicion && p.status!=='revealed' ? `<button class="btn btn-small" style="color:var(--blue-glow);border-color:var(--blue);" onclick="setBeyondSuspicion(${i})">BS</button>` : ''}
-        ${p.beyondSuspicion ? `<button class="btn btn-small" style="color:var(--text-dim);border-color:var(--border);" onclick="removeBeyondSuspicion(${i})">-BS</button>` : ''}
+        <button class="btn btn-small" style="color:var(--warn);border-color:rgba(249,168,37,0.4);" onclick="absorbPlayer(${i})">Absorb</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  return `<div class="fade-in">
+    ${phaseHeader()}
+    ${renderDebug()}
+    <div class="phase-banner">
+      <div class="phase-title">Phase 4 — Draw Cards & Take Actions</div>
+      <div class="phase-desc">Set up room encounters and resolve absorptions.</div>
+    </div>
+
+    <div class="card"><h2>Players</h2>${playerRows}</div>
+    ${renderRevealed()}
+
+    <div style="margin-bottom:12px;">
+      <button class="btn btn-secondary" onclick="startRoomEncounter()" ${available.length<1?'disabled':''}>🚪 Room Encounter</button>
+    </div>
+
+    ${renderEncounterLog()}
+
+    <button class="btn btn-primary" onclick="S.phase='phase5';S.screen='phase5';render()">Proceed to Phase 5</button>
+    <div class="gap-md"></div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════
+// PHASE 5: Leisure Room & Accusations
+// ═══════════════════════════════════════
+function renderPhase5() {
+  const active = getActivePlayerIndices();
+
+  const playerRows = active.map(i => {
+    const p = S.players[i];
+    let chips = '';
+    if (p.beyondSuspicion) chips += ' <span class="chip chip-beyond">BS</span>';
+    if (p.hasWeapon) chips += ' <span class="chip chip-weapon">W</span>';
+
+    return `<div class="player-list-item">
+      <div><div class="name">${esc(p.name)}${chips}</div></div>
+      <div class="player-action-btns">
         ${!p.hasWeapon ? `<button class="btn btn-small" style="color:var(--warn);border-color:rgba(249,168,37,0.4);" onclick="toggleWeapon(${i})">+W</button>` : `<button class="btn btn-small" style="color:var(--text-dim);border-color:var(--border);" onclick="toggleWeapon(${i})">-W</button>`}
-        <button class="btn btn-small" style="color:var(--human-glow);border-color:var(--human);" onclick="testPlayer(${i})">Test</button>
         <button class="btn btn-danger btn-small" onclick="revealPlayer(${i})">Reveal</button>
       </div>
     </div>`;
   }).join('');
 
-  // Revealed
-  const revealed = S.players.filter(p=>p.status==='revealed');
-  let revealedHtml = '';
-  if (revealed.length) {
-    revealedHtml = `<div class="card"><h2>Revealed Things</h2>
-      ${revealed.map(p=>`<div class="player-list-item" style="opacity:0.5;"><div class="name">${esc(p.name)}</div><span class="status-badge status-revealed">Revealed</span></div>`).join('')}
+  return `<div class="fade-in">
+    ${phaseHeader()}
+    ${renderDebug()}
+    <div class="phase-banner">
+      <div class="phase-title">Phase 5 — Leisure Room & Accusations</div>
+      <div class="phase-desc">Assign or remove weapons. Handle accusations and reveals.</div>
+    </div>
+
+    <div class="card"><h2>Players</h2>${playerRows}</div>
+    ${renderRevealed()}
+
+    <button class="btn btn-primary" onclick="S.phase='phase6';S.screen='phase6';render()">Proceed to Phase 6</button>
+    <div class="gap-md"></div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════
+// PHASE 6: Tests
+// ═══════════════════════════════════════
+function renderPhase6() {
+  const active = getActivePlayerIndices();
+
+  const playerRows = active.map(i => {
+    const p = S.players[i];
+    let chips = '';
+    if (p.beyondSuspicion) chips += ' <span class="chip chip-beyond">BS</span>';
+    if (p.hasWeapon) chips += ' <span class="chip chip-weapon">W</span>';
+
+    return `<div class="player-list-item">
+      <div><div class="name">${esc(p.name)}${chips}</div></div>
+      <div class="player-action-btns">
+        <button class="btn btn-small" style="color:var(--human-glow);border-color:var(--human);" onclick="testPlayer(${i})">Test</button>
+      </div>
     </div>`;
-  }
-
-  // Encounter log this round
-  const roundEncs = S.encounters.filter(e=>e.round===S.round);
-  let encHtml = '';
-  if (roundEncs.length) {
-    encHtml = `<div class="card"><h2>Round ${S.round} Encounters</h2>
-      ${roundEncs.map(e=>`<div class="encounter-log-item">
-        <strong>Room:</strong> ${e.room.map(i=>esc(S.players[i].name)).join(', ')}${e.hasDog?' 🐕':''} — Resolved
-        ${S.debug ? e.results.map(r=>`<div class="encounter-result ${r.includes('☣')?'infected':'no-risk'}">${r}</div>`).join('') : ''}
-      </div>`).join('')}</div>`;
-  }
-
-  // Debug: past encounters
-  let pastEncHtml = '';
-  if (S.debug) {
-    const past = S.encounters.filter(e=>e.round<S.round);
-    if (past.length) {
-      pastEncHtml = `<div class="debug-panel"><h3>🔧 Past Encounters</h3>
-        ${past.map(e=>`<div class="encounter-log-item">
-          R${e.round}: ${e.room.map(i=>esc(S.players[i].name)).join(', ')}${e.hasDog?' 🐕':''}
-          ${e.results.map(r=>`<div class="encounter-result ${r.includes('☣')?'infected':'no-risk'}">${r}</div>`).join('')}
-        </div>`).join('')}</div>`;
-    }
-  }
+  }).join('');
 
   return `<div class="fade-in">
-    <div class="header-bar">
-      <h1 style="font-size:1.2rem;margin:0;">The Thing</h1>
-      <div class="round-badge">Round <span class="num">${S.round}</span></div>
+    ${phaseHeader()}
+    ${renderDebug()}
+    <div class="phase-banner">
+      <div class="phase-title">Phase 6 — Tests</div>
+      <div class="phase-desc">Test players to reveal their true infection status.</div>
     </div>
-    ${debugHtml}
-    <div class="card"><h2>Players</h2>${playerRows}</div>
-    ${revealedHtml}
-    <div style="margin-bottom:12px;">
-      <button class="btn btn-secondary" onclick="startRoomEncounter()" ${available.length<1?'disabled':''}>🚪 Room Encounter</button>
+
+    <div class="card"><h2>Test a Player</h2>${playerRows}</div>
+    ${renderRevealed()}
+
+    <button class="btn btn-primary" onclick="S.phase='phase7-8';S.screen='phase7-8';render()">Proceed to Phases 7–8</button>
+    <div class="gap-md"></div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════
+// PHASE 7-8: Food & Dog Movement, then End Round
+// ═══════════════════════════════════════
+function renderPhase78() {
+  const informList = buildInformList();
+  const informNext = getPlayersToInformNextRound();
+
+  // Show active players with inform schedule
+  const active = getActivePlayerIndices();
+  const playerRows = active.map(i => {
+    const p = S.players[i];
+    let tag = '';
+    if (informList.includes(i)) tag = `<div class="inform-tag soon">📋 Check-in: end of this round</div>`;
+    else if (informNext.includes(i)) tag = `<div class="inform-tag">Check-in: end of next round</div>`;
+    let chips = '';
+    if (p.beyondSuspicion) chips += ' <span class="chip chip-beyond">BS</span>';
+    if (p.hasWeapon) chips += ' <span class="chip chip-weapon">W</span>';
+    return `<div class="player-list-item"><div>
+      <div class="name">${esc(p.name)}${chips}</div>${tag}
+    </div></div>`;
+  }).join('');
+
+  return `<div class="fade-in">
+    ${phaseHeader()}
+    ${renderDebug()}
+    <div class="phase-banner">
+      <div class="phase-title">Phases 7–8</div>
+      <div class="phase-item">7. 🍖 Food Consumption</div>
+      <div class="phase-item">8. 🐕 Dog Movement & Leader Change</div>
+      <div class="phase-desc" style="margin-top:8px;">Complete these phases on the board, then end the round.</div>
     </div>
-    ${encHtml}
-    ${pastEncHtml}
+
+    <div class="card"><h2>Players — Check-in Schedule</h2>${playerRows}</div>
+    ${renderRevealed()}
+    ${renderEncounterLog()}
+
     <button class="btn btn-primary" onclick="confirmEndRound()">End Round ${S.round}</button>
     <div class="gap-md"></div>
     <button class="btn btn-danger btn-small" style="width:100%;" onclick="confirmReset()">Reset Game</button>
@@ -494,167 +539,120 @@ function renderMain() {
   </div>`;
 }
 
+// ─── Room Select ───
 function renderRoomSelect() {
   const available = getAvailableForRoom();
   const selected = S.room.playerIndices;
   const hasDog = !!S.room.hasDog;
-
-  // Determine if we can proceed
   let canProceed = false;
   let warning = '';
-
   if (selected.length === 1 && hasDog) {
-    // 1 player + Dog: always valid (Dog encounter)
     canProceed = true;
   } else if (selected.length >= 2 && selected.length <= 3) {
-    // 2-3 players: need at least one non-BS player presenting tokens
-    // AND at least one player able to pick from a non-BS player
     const nonBSInRoom = selected.filter(i => !S.players[i].beyondSuspicion);
-    if (nonBSInRoom.length < 1) {
-      warning = '⚠ No tokens can be picked — all selected players are Beyond Suspicion.';
-    } else if (!selected.some(i => selected.some(j => j !== i && !S.players[j].beyondSuspicion))) {
-      warning = '⚠ No valid token picks possible with this combination.';
-    } else {
-      canProceed = true;
-    }
+    if (nonBSInRoom.length < 1) warning = '⚠ No tokens can be picked — all selected players are Beyond Suspicion.';
+    else if (!selected.some(i => selected.some(j => j !== i && !S.players[j].beyondSuspicion))) warning = '⚠ No valid token picks possible with this combination.';
+    else canProceed = true;
   } else if (selected.length === 1 && !hasDog) {
     warning = '⚠ A single player needs a Dog in the room for an encounter.';
   }
 
   return `<div class="fade-in">
-    <div class="header-bar">
-      <h1 style="font-size:1.2rem;margin:0;">Room Setup</h1>
-      <div class="round-badge">Round <span class="num">${S.round}</span></div>
-    </div>
+    <div class="header-bar"><h1 style="font-size:1.2rem;margin:0;">Room Setup</h1>
+      <div class="round-badge">Round <span class="num">${S.round}</span></div></div>
     <div class="card">
       <h2>Select players in this room (1-3)</h2>
       <p style="color:var(--text-dim);font-size:0.85rem;margin-bottom:12px;">Tap to toggle. ${selected.length}/3 selected.</p>
       ${available.map(i => {
-        const p = S.players[i];
-        const isSel = selected.includes(i);
+        const p = S.players[i]; const isSel = selected.includes(i);
         let chips = '';
         if (p.beyondSuspicion) chips += ' <span class="chip chip-beyond">BS</span>';
         if (p.hasWeapon) chips += ' <span class="chip chip-weapon">W</span>';
         return `<div class="player-list-item" style="cursor:pointer;${isSel?'border-color:var(--accent-glow);background:rgba(198,40,40,0.08);':''}" onclick="toggleRoomPlayer(${i})">
-          <div class="name">${esc(p.name)}${chips}</div>
-          <span style="font-size:1.2rem;">${isSel?'✓':''}</span>
-        </div>`;
+          <div class="name">${esc(p.name)}${chips}</div><span style="font-size:1.2rem;">${isSel?'✓':''}</span></div>`;
       }).join('')}
-
       <div class="gap-sm"></div>
       <div class="player-list-item" style="cursor:pointer;${hasDog?'border-color:var(--warn);background:rgba(249,168,37,0.08);':''}" onclick="S.room.hasDog=!S.room.hasDog;render()">
-        <div class="name">🐕 Dog in room</div>
-        <span style="font-size:1.2rem;">${hasDog?'✓':''}</span>
-      </div>
-
+        <div class="name">🐕 Dog in room</div><span style="font-size:1.2rem;">${hasDog?'✓':''}</span></div>
       <div class="gap-md"></div>
       ${warning ? `<p style="color:var(--warn);font-size:0.85rem;margin-bottom:8px;">${warning}</p>` : ''}
       <button class="btn btn-primary" ${!canProceed?'disabled':''} onclick="proceedFromRoomSelect()">
-        ${selected.length === 1 && hasDog ? 'Resolve Dog Encounter' : 'Set Up Picks'}
-      </button>
+        ${selected.length === 1 && hasDog ? 'Resolve Dog Encounter' : 'Set Up Picks'}</button>
       <div class="gap-sm"></div>
       <button class="btn btn-secondary" onclick="cancelRoom()">Cancel</button>
-    </div>
-  </div>`;
+    </div></div>`;
 }
 
+// ─── Room Picks ───
 function renderRoomPicks() {
   const room = S.room.playerIndices;
   const picks = S.room.picks;
   const weaponUsed = S.room.weaponUsed || {};
-
-  // Active participants: not using weapon
   const activeInRoom = room.filter(i => !weaponUsed[i]);
 
   const rows = room.map(i => {
     const p = S.players[i];
     const isUsingWeapon = !!weaponUsed[i];
-
     let chips = '';
     if (p.beyondSuspicion) chips += ' <span class="chip chip-beyond">BS</span>';
     if (p.hasWeapon) chips += ' <span class="chip chip-weapon">W</span>';
-
-    // Weapon holders get a toggle to use/not use weapon
     let weaponToggle = '';
     if (p.hasWeapon) {
       weaponToggle = `<div style="margin-bottom:6px;">
-        <button class="btn btn-small" style="width:100%;${isUsingWeapon ? 'color:var(--warn);border-color:rgba(249,168,37,0.4);' : 'color:var(--text-dim);border-color:var(--border);'}"
+        <button class="btn btn-small" style="width:100%;${isUsingWeapon?'color:var(--warn);border-color:rgba(249,168,37,0.4);':'color:var(--text-dim);border-color:var(--border);'}"
           onclick="toggleWeaponUse(${i})">
-          ${isUsingWeapon ? '🔫 Using Weapon — Not participating' : '🔫 Not using weapon — Participating normally'}
-        </button>
-      </div>`;
+          ${isUsingWeapon?'🔫 Using Weapon — Not participating':'🔫 Not using weapon — Participating normally'}</button></div>`;
     }
-
-    // If using weapon, show as opted out
     if (isUsingWeapon) {
       return `<div class="room-player-row" style="opacity:0.6;">
-        <div class="room-player-name">${esc(p.name)}${chips}</div>
-        ${weaponToggle}
-        <div class="room-pick-row"><label style="color:var(--text-dim);font-style:italic;">Opted out — no tokens presented or taken</label></div>
-      </div>`;
+        <div class="room-player-name">${esc(p.name)}${chips}</div>${weaponToggle}
+        <div class="room-pick-row"><label style="color:var(--text-dim);font-style:italic;">Opted out — no tokens presented or taken</label></div></div>`;
     }
-
-    // Targets: other ACTIVE (non-weapon-using) players who are NOT beyond suspicion
     const targets = activeInRoom.filter(j => j !== i && !S.players[j].beyondSuspicion);
     const forcedNoPick = targets.length === 0;
+    if (forcedNoPick && picks[i] !== 'none') picks[i] = 'none';
     const currentPick = picks[i] !== undefined ? picks[i] : (forcedNoPick ? 'none' : '');
-
     let pickUI;
     if (forcedNoPick) {
       pickUI = `<div class="room-pick-row"><label style="color:var(--text-dim);font-style:italic;">No tokens available to pick</label></div>`;
     } else {
-      pickUI = `<div class="room-pick-row">
-        <label>Picks from:</label>
+      pickUI = `<div class="room-pick-row"><label>Picks from:</label>
         <select onchange="setRoomPick(${i},this.value)">
           <option value="" ${currentPick===''?'selected':''}>Select...</option>
-          ${targets.map(j => `<option value="${j}" ${currentPick===j?'selected':''}>${esc(S.players[j].name)}</option>`).join('')}
-        </select>
-      </div>`;
+          ${targets.map(j=>`<option value="${j}" ${currentPick===j?'selected':''}>${esc(S.players[j].name)}</option>`).join('')}
+        </select></div>`;
     }
-
     return `<div class="room-player-row">
-      <div class="room-player-name">${esc(p.name)}${chips}</div>
-      ${weaponToggle}
-      ${pickUI}
+      <div class="room-player-name">${esc(p.name)}${chips}</div>${weaponToggle}${pickUI}
       ${p.beyondSuspicion && !forcedNoPick && currentPick !== 'none' && currentPick !== '' ? '<div style="font-size:0.75rem;color:var(--warn);margin-top:4px;">⚠ Will lose Beyond Suspicion</div>' : ''}
     </div>`;
   }).join('');
 
-  // Validate: all active (non-weapon-using) players must have a valid pick
-  const allValid = room.every(i => {
-    if (weaponUsed[i]) return true; // Weapon users are opted out, always valid
+  const isValid = room.every(i => {
+    if (weaponUsed[i]) return true;
     const targets = activeInRoom.filter(j => j !== i && !S.players[j].beyondSuspicion);
-    if (targets.length === 0) return true; // Forced no-pick
+    if (targets.length === 0) return true;
     const pick = picks[i];
     return pick !== undefined && pick !== '' && pick !== 'none';
   });
-
-  // Also check: at least 2 active participants remain (otherwise encounter is pointless)
   const enoughActive = activeInRoom.length >= 2;
-  // Edge case: if only BS players remain active, no tokens to pick — still allow resolve
-  // but the room-select validation should have caught the all-BS case already
 
   return `<div class="fade-in">
-    <div class="header-bar">
-      <h1 style="font-size:1.2rem;margin:0;">Token Picks</h1>
-      <div class="round-badge">Round <span class="num">${S.round}</span></div>
-    </div>
+    <div class="header-bar"><h1 style="font-size:1.2rem;margin:0;">Token Picks</h1>
+      <div class="round-badge">Round <span class="num">${S.round}</span></div></div>
     <div class="card">
       <h2>Who picks from whom?</h2>
       ${S.room.dogResult === 'kenneled' ? '<div style="background:rgba(249,168,37,0.1);border:1px solid rgba(249,168,37,0.3);border-radius:8px;padding:8px 12px;margin-bottom:12px;font-size:0.85rem;color:var(--warn);">🐕 Dog was Kenneled — no infection from Dog</div>' : ''}
-      <p style="color:var(--text-dim);font-size:0.85rem;margin-bottom:12px;">
-        Each player picks one token from another player. Beyond Suspicion players have no tokens. Weapon holders can opt out entirely.
-      </p>
-      ${rows}
-      <div class="gap-md"></div>
-      ${!enoughActive ? '<p style="color:var(--warn);font-size:0.85rem;margin-bottom:8px;">⚠ Need at least 2 active participants.</p>' : ''}
-      <button class="btn btn-primary" ${!(allValid && enoughActive)?'disabled':''} onclick="resolveRoom()">Resolve Encounter</button>
+      <p style="color:var(--text-dim);font-size:0.85rem;margin-bottom:12px;">Each player picks one token from another player. Beyond Suspicion players have no tokens. Weapon holders can opt out entirely.</p>
+      ${rows}<div class="gap-md"></div>
+      ${!enoughActive?'<p style="color:var(--warn);font-size:0.85rem;margin-bottom:8px;">⚠ Need at least 2 active participants.</p>':''}
+      <button class="btn btn-primary" ${!(isValid&&enoughActive)?'disabled':''} onclick="resolveRoom()">Resolve Encounter</button>
       <div class="gap-sm"></div>
       <button class="btn btn-secondary" onclick="S.screen='room-select';render()">Back</button>
-    </div>
-  </div>`;
+    </div></div>`;
 }
 
+// ─── End of round inform screens ───
 function renderEndRoundSelect() {
   const remaining = S.informQueue.filter(i => !S.informDone.has(i));
   if (!remaining.length) {
@@ -667,14 +665,11 @@ function renderEndRoundSelect() {
   }
   return `<div class="fade-in">
     <div class="header-bar"><h1 style="font-size:1.2rem;margin:0;">End of Round ${S.round}</h1></div>
-    <div class="card">
-      <h2>Pass to each player</h2>
+    <div class="card"><h2>Pass to each player</h2>
       <p style="color:var(--text-dim);font-size:0.9rem;margin-bottom:16px;">Hand the device to each player privately so they can check their status.</p>
       <div class="player-select-list">
         ${remaining.map(i=>`<button onclick="showPlayerStatus(${i})">${esc(S.players[i].name)}</button>`).join('')}
-      </div>
-    </div>
-  </div>`;
+      </div></div></div>`;
 }
 
 function renderRevealStatus() {
@@ -698,12 +693,10 @@ function renderConfirmModal() {
       <div class="modal-btns">
         <button class="btn btn-secondary" onclick="cancelConfirm(event)" style="flex:1;">Cancel</button>
         <button class="btn btn-primary" onclick="doConfirm()" style="flex:1;">Confirm</button>
-      </div>
-    </div></div>`;
+      </div></div></div>`;
 }
 
 // ─── Actions ───
-
 function selectCount(n) {
   S.playerCount = n;
   while (S.players.length < n) S.players.push(makePlayer(''));
@@ -726,9 +719,10 @@ function startGame() {
   S.players[idx].status = 'thing';
   S.players[idx].infectedOnRound = 0;
   S.round = 1;
+  S.phase = 'phase1-3';
   S.encounters = [];
   snapshotStartOfRound();
-  S.screen = 'main';
+  S.screen = 'phase1-3';
   render();
 }
 
@@ -740,8 +734,14 @@ function revealPlayer(idx) {
   S.confirmModal = {
     message: `Reveal ${esc(S.players[idx].name)} as a Thing? They will be removed from the game.`,
     onConfirm: () => { S.players[idx].status='revealed'; S.players[idx].beyondSuspicion=false; render(); }
-  };
-  render();
+  }; render();
+}
+
+function absorbPlayer(idx) {
+  S.confirmModal = {
+    message: `Absorb ${esc(S.players[idx].name)}? They will be removed from the game by a Revealed Thing.`,
+    onConfirm: () => { S.players[idx].status='revealed'; S.players[idx].beyondSuspicion=false; render(); }
+  }; render();
 }
 
 function testPlayer(idx) {
@@ -750,225 +750,112 @@ function testPlayer(idx) {
     message: `Test ${esc(p.name)}? Their true infection status will be revealed to all players.`,
     onConfirm: () => {
       if (p.status === 'thing') {
-        // Infected — Reveal them (removed from game)
-        p.status = 'revealed';
-        p.beyondSuspicion = false;
-        S.confirmModal = {
-          message: `☣ ${esc(p.name)} is INFECTED! They have been Revealed and removed from the game.`,
-          onConfirm: () => { render(); }
-        };
+        p.status = 'revealed'; p.beyondSuspicion = false;
+        S.confirmModal = { message: `☣ ${esc(p.name)} is INFECTED! They have been Revealed and removed from the game.`, onConfirm: () => { render(); } };
       } else {
-        // Human — grant Beyond Suspicion
-        p.beyondSuspicion = true;
-        // Clear from inform/check-in lists: their status is now public knowledge
-        p.lastCheckedInRound = S.round;
-        S.confirmModal = {
-          message: `✅ ${esc(p.name)} is HUMAN! They are now Beyond Suspicion.`,
-          onConfirm: () => { render(); }
-        };
+        p.beyondSuspicion = true; p.lastCheckedInRound = S.round;
+        S.confirmModal = { message: `✅ ${esc(p.name)} is HUMAN! They are now Beyond Suspicion.`, onConfirm: () => { render(); } };
       }
       render();
     }
-  };
-  render();
+  }; render();
 }
 
-// Room encounter
+// ─── Room encounter ───
 function startRoomEncounter() {
   S.room = { playerIndices:[], picks:{}, weaponUsed:{}, hasDog:false };
-  S.screen = 'room-select';
-  render();
+  S.screen = 'room-select'; render();
 }
 
 function toggleRoomPlayer(i) {
   const idx = S.room.playerIndices.indexOf(i);
-  if (idx >= 0) {
-    S.room.playerIndices.splice(idx, 1);
-  } else if (S.room.playerIndices.length < 3) {
-    S.room.playerIndices.push(i);
-  }
-  // Reset picks when room changes
-  S.room.picks = {};
-  render();
+  if (idx >= 0) S.room.playerIndices.splice(idx, 1);
+  else if (S.room.playerIndices.length < 3) S.room.playerIndices.push(i);
+  S.room.picks = {}; render();
 }
 
-// Route from room select: Dog-only encounter or normal picks
 function proceedFromRoomSelect() {
-  const selected = S.room.playerIndices;
-  const hasDog = !!S.room.hasDog;
-
-  if (selected.length === 1 && hasDog) {
-    // 1 player + Dog: resolve Dog encounter directly
-    resolveDogEncounter();
-  } else {
-    // 2-3 players (with or without Dog): go to picks
-    // If Dog present, it's Kenneled (noted in results)
-    goToRoomPicks();
-  }
+  if (S.room.playerIndices.length === 1 && S.room.hasDog) resolveDogEncounter();
+  else goToRoomPicks();
 }
 
 function resolveDogEncounter() {
   const playerIdx = S.room.playerIndices[0];
   const p = S.players[playerIdx];
   const results = [];
-
-  // 2/9 chance of infection
   const infected = Math.random() < (2/9);
-
   if (infected) {
-    if (p.status === 'human') {
-      p.status = 'thing';
-      p.infectedOnRound = S.round;
-    }
+    if (p.status === 'human') { p.status = 'thing'; p.infectedOnRound = S.round; }
     results.push(`🐕 ${esc(p.name)} picked an infected token from the Dog — ☣ INFECTED`);
   } else {
     results.push(`🐕 ${esc(p.name)} picked a safe token from the Dog`);
   }
-
-  // Mark player as having been in a room this round
   p.inEncounterThisRound = true;
-
-  // Save encounter record — player counts as active picker for inform purposes
-  S.encounters.push({
-    round: S.round,
-    room: [playerIdx],
-    picks: {},
-    weaponUsed: {},
-    activePickers: [playerIdx],
-    results: results,
-    hasDog: true,
-  });
-
-  // Reset room state
+  S.encounters.push({ round:S.round, room:[playerIdx], picks:{}, weaponUsed:{}, activePickers:[playerIdx], results, hasDog:true });
   S.room = { playerIndices:[], picks:{}, weaponUsed:{}, hasDog:false };
-  S.screen = 'main';
-  render();
+  S.screen = 'phase4'; render();
 }
 
 function goToRoomPicks() {
-  // Initialize weapon usage and picks
-  S.room.weaponUsed = {};
-  S.room.picks = {};
-  S.room.dogResult = null; // Store Dog kenneling note if applicable
-
-  // If Dog is present with 2-3 players, it's Kenneled
-  if (S.room.hasDog && S.room.playerIndices.length >= 2) {
-    S.room.dogResult = 'kenneled';
-  }
-
+  S.room.weaponUsed = {}; S.room.picks = {}; S.room.dogResult = null;
+  if (S.room.hasDog && S.room.playerIndices.length >= 2) S.room.dogResult = 'kenneled';
   for (const i of S.room.playerIndices) {
-    const p = S.players[i];
-    if (p.hasWeapon) {
-      S.room.weaponUsed[i] = true; // Default to using weapon (opting out)
-    }
+    if (S.players[i].hasWeapon) S.room.weaponUsed[i] = true;
   }
-  recalcRoomPicks();
-  S.screen = 'room-picks';
-  render();
+  recalcRoomPicks(); S.screen = 'room-picks'; render();
 }
 
-// Recalculate pick defaults based on who is actively participating
-// (excluding weapon users who opted out)
 function recalcRoomPicks() {
   const room = S.room.playerIndices;
   const activeInRoom = room.filter(i => !S.room.weaponUsed[i]);
-
   for (const i of room) {
-    if (S.room.weaponUsed[i]) {
-      // Using weapon — completely out of encounter
-      S.room.picks[i] = 'none';
-      continue;
-    }
-    // Targets: other ACTIVE players in room who are NOT beyond suspicion
+    if (S.room.weaponUsed[i]) { S.room.picks[i] = 'none'; continue; }
     const targets = activeInRoom.filter(j => j !== i && !S.players[j].beyondSuspicion);
-    if (targets.length === 0) {
-      S.room.picks[i] = 'none'; // No valid targets
-    } else if (S.room.picks[i] === 'none' || S.room.picks[i] === undefined) {
-      // Reset to unselected if they had no pick before
-      S.room.picks[i] = '';
-    }
-    // If they already have a valid pick, check it's still valid
-    if (typeof S.room.picks[i] === 'number' && !targets.includes(S.room.picks[i])) {
-      S.room.picks[i] = ''; // Target no longer valid
-    }
+    if (targets.length === 0) S.room.picks[i] = 'none';
+    else if (S.room.picks[i] === 'none' || S.room.picks[i] === undefined) S.room.picks[i] = '';
+    if (typeof S.room.picks[i] === 'number' && !targets.includes(S.room.picks[i])) S.room.picks[i] = '';
   }
 }
 
-function toggleWeaponUse(playerIdx) {
-  S.room.weaponUsed[playerIdx] = !S.room.weaponUsed[playerIdx];
-  recalcRoomPicks();
-  render();
-}
+function toggleWeaponUse(playerIdx) { S.room.weaponUsed[playerIdx] = !S.room.weaponUsed[playerIdx]; recalcRoomPicks(); render(); }
+function setRoomPick(picker, val) { S.room.picks[picker] = val === 'none' ? 'none' : (val === '' ? '' : parseInt(val)); render(); }
+function cancelRoom() { S.room = { playerIndices:[], picks:{}, weaponUsed:{}, hasDog:false }; S.screen = 'phase4'; render(); }
 
-function setRoomPick(picker, val) {
-  S.room.picks[picker] = val === 'none' ? 'none' : (val === '' ? '' : parseInt(val));
-  render();
-}
-
-function cancelRoom() {
-  S.room = { playerIndices:[], picks:{}, weaponUsed:{}, hasDog:false };
-  S.screen = 'main';
-  render();
-}
-
-// End of round
+// ─── End of round ───
 function confirmEndRound() {
   S.confirmModal = {
     message: `End Round ${S.round}? This will begin the player check-in process.`,
-    onConfirm: () => {
-      S.informQueue = buildInformList();
-      S.informDone = new Set();
-      S.screen = 'end-round-select';
-      render();
-    }
-  };
-  render();
+    onConfirm: () => { S.informQueue = buildInformList(); S.informDone = new Set(); S.screen = 'end-round-select'; render(); }
+  }; render();
 }
 
 function showPlayerStatus(idx) {
   const p = S.players[idx];
   const isRound1Special = (S.round === 1);
-
   if (isRound1Special) {
     const startingIsThing = (p.infectedOnRound === 0);
     S._revealOverride = startingIsThing ? 'thing' : 'human';
-    if (startingIsThing && !p.informed) {
-      p.informed = true;
-      p.informedOnRound = S.round;
-    }
-    // Don't set lastCheckedInRound — round 1 special doesn't clear encounter obligations
+    if (startingIsThing && !p.informed) { p.informed = true; p.informedOnRound = S.round; }
   } else {
     const displayStatus = p.statusAtStartOfRound || p.status;
     S._revealOverride = displayStatus;
     if (displayStatus === 'thing' && !p.informed) {
       const dueRound = (p.infectedOnRound === 0) ? 1 : p.infectedOnRound + 1;
-      if (S.round >= dueRound) {
-        p.informed = true;
-        p.informedOnRound = S.round;
-      }
+      if (S.round >= dueRound) { p.informed = true; p.informedOnRound = S.round; }
     }
     p.lastCheckedInRound = S.round - 1;
   }
-
-  S.informDone.add(idx);
-  S.revealPlayerIdx = idx;
-  S.screen = 'reveal-status';
-  render();
+  S.informDone.add(idx); S.revealPlayerIdx = idx; S.screen = 'reveal-status'; render();
 }
 
-function dismissReveal() {
-  S.revealPlayerIdx = null;
-  S._revealOverride = null;
-  S.screen = 'end-round-select';
-  render();
-}
+function dismissReveal() { S.revealPlayerIdx = null; S._revealOverride = null; S.screen = 'end-round-select'; render(); }
 
 function advanceRound() {
   S.round++;
-  // Reset per-round flags
+  S.phase = 'phase1-3';
   for (const p of S.players) p.inEncounterThisRound = false;
   snapshotStartOfRound();
-  S.screen = 'main';
+  S.screen = 'phase1-3';
   render();
 }
 
@@ -977,15 +864,12 @@ function confirmReset() {
     message: 'Reset the entire game? All progress will be lost.',
     onConfirm: () => {
       const dbg = S.debug;
-      S = { screen:'setup-count', playerCount:0, players:[], round:1, encounters:[],
-            debug:dbg, confirmModal:null,
-            room:{ playerIndices:[], picks:{}, weaponUsed:{}, hasDog:false },
-            informQueue:[], informDone:null,
-            revealPlayerIdx:null, _revealOverride:null };
+      S = { screen:'setup-count', playerCount:0, players:[], round:1, phase:'phase1-3', encounters:[],
+            debug:dbg, confirmModal:null, room:{ playerIndices:[], picks:{}, weaponUsed:{}, hasDog:false },
+            informQueue:[], informDone:null, revealPlayerIdx:null, _revealOverride:null };
       render();
     }
-  };
-  render();
+  }; render();
 }
 
 function doConfirm() { if (S.confirmModal?.onConfirm) S.confirmModal.onConfirm(); S.confirmModal=null; render(); }
